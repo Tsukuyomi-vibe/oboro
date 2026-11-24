@@ -19,6 +19,12 @@ Oboro applies a regional profile to selected sites. The package includes the mai
 
 After updating, reload previously processed pages to remove old wrappers and diagnostic objects. The page-facing report does not publish your permission list, profile name, shared activation identifier or internal revisions. See [privacy](privacy.md) and the [data reference](../info.md), both in Russian.
 
+## Configuration backup
+
+Open **Configuration backup** in settings and click **Export saved configuration** to download `oboro-config-<version>.json`. It includes saved profile/site/UI settings, permission hints, mandatory oboroVersion and an independent schemaVersion. Unsaved drafts and runtime/diagnostic state are excluded. The file contains private coordinates and sites; keep it private.
+
+Choose a JSON file, review changes and confirm **Import these settings**. Legacy v1 profile files restore only the profile. Full import leaves overrides off, retains existing Chrome permissions and offers a separate button for missing access. All-sites mode uses the current browser's grants. Apply separately after checking compatibility; previously processed pages need a reload. Future schemas are rejected without changing settings; interrupted writes have a rollback journal. [Format contract](configuration-format.md) and [v1 schema](../schemas/oboro-config.v1.schema.json).
+
 ## Disable and coverage limits
 
 The master switch removes future script registrations and network rules. Reload previously processed documents to restore native APIs. If cleanup is incomplete, use **Disable and retry cleanup**.

@@ -100,6 +100,12 @@ input.switch:disabled::before { background: var(--color-text-secondary); }
 .module-coverage [data-state="error"] { color: var(--color-danger); }
 .module-coverage [data-state="unsupported"] { color: var(--color-warning); }
 .document-reasons { padding-left: 18px; font-size: 12px; line-height: 1.6; color: var(--color-warning); }
+.config-table-scroll { overflow-x: auto; max-height: 440px; margin: 16px 0; }
+.config-changes { border-collapse: collapse; width: 100%; font-size: 12px; line-height: 1.5; }
+.config-changes th, .config-changes td { padding: 9px; border-bottom: 1px solid var(--color-border-subtle); text-align: left; vertical-align: top; white-space: pre-wrap; overflow-wrap: anywhere; }
+.config-changes th { color: var(--color-text-secondary); font-weight: 600; }
+.config-changes td { min-width: 90px; max-width: 220px; }
+.config-origins { padding-left: 20px; font: 12px/1.6 Consolas, monospace; overflow-wrap: anywhere; }
 
 @media (max-width: 520px) {
   .options-content { padding-top: 28px; }

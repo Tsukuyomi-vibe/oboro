@@ -1,5 +1,6 @@
 export const PROFILE_SCHEMA_VERSION = 1 as const;
 export const PROFILE_STORAGE_KEY = "regionalProfile";
+export const PROFILE_REVISION_KEY = "regionalProfileRevision";
 export const MAX_PROFILE_LANGUAGES = 10;
 
 export interface RegionalGeolocation {

@@ -103,9 +103,7 @@ test("language changes retain dirty inputs, focus, validation and theme without 
   profile.name = "Ошибка";
   const ui = optionsPage({ profile, policy: testSitePolicy(), language: null, uiStorage: { "oboro.theme": "dark" } });
   t.after(ui.close); await ui.flush();
-  // The production theme controller and language controller use separate keys.
-  ui.window.eval(theme);
-  ui.document.dispatchEvent(new ui.window.Event("DOMContentLoaded"));
+  // Production head controllers use separate keys for theme and language.
   ui.set("latitude", "91"); ui.set("name", "Мой черновик");
   const input = ui.query('[name="latitude"]'); input.focus();
   const before = ui.snapshot(), calls = [...ui.calls], messages = ui.messages.length;

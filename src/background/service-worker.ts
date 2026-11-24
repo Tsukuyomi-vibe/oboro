@@ -11,6 +11,8 @@ import { FrameRegistry } from "../activation/frames";
 import { CAPABILITY_EVIDENCE_KEY, inspectProductCapabilities } from "../activation/capabilities";
 import { FRAME_CHANNEL } from "../runtime/types";
 import { httpUrl, resolveSite } from "../sites/policy";
+import { ConfigurationService } from "../config/service";
+import { ConfigurationError } from "../config/types";
 
 const queue = new ConfigurationQueue();
 const sessionStorage = chrome.storage.session ?? { get: async () => ({}), set: async () => { throw new Error("Session storage unavailable"); } };
@@ -25,17 +27,32 @@ coordinator = new ActivationCoordinator({
   contains: (origins) => chrome.permissions.contains({ origins }),
   capabilities: inspectProductCapabilities, setEnabled: setMasterEnabled, id: () => crypto.randomUUID(), buildVersion: chrome.runtime.getManifest?.().version ?? "development"
 });
+const configurations = new ConfigurationService({
+  storage: chrome.storage.local, loadProfile: () => profiles.load(), loadPolicy: () => sites.load(), disable: () => coordinator.disable(),
+  origins: async () => (await chrome.permissions.getAll()).origins ?? [], contains: (origins) => chrome.permissions.contains({ origins }),
+  id: () => crypto.randomUUID(), version: () => chrome.runtime.getManifest().version
+});
 let bootError: unknown = null;
-const boot = queue.run(() => coordinator.initialize()).catch((error: unknown) => { bootError = error; });
+const boot = queue.run(async () => { await coordinator.initialize(); await configurations.recover(); }).catch((error: unknown) => { bootError = error; });
 const execute = <T>(action: () => Promise<T>): Promise<T> => queue.run(async () => {
   await boot;
   if (bootError) throw new Error("Не удалось прочитать состояние расширения. Перезагрузите расширение.");
+  await configurations.recover();
   return action();
 });
 const wrap = (handler: ControlHandler): ControlHandler => (input) => execute(() => handler(input));
+const configOperation = (fields: string[], handler: ControlHandler): ControlHandler => wrap((input) => {
+  if (Object.keys(input).some((key) => !["channel", "operation", ...fields].includes(key))) throw new ConfigurationError("INVALID_REQUEST", "В конфигурации есть неизвестные поля.");
+  return handler(input);
+});
 
 chrome.runtime.onMessage.addListener(createProfileMessageListener(profiles, chrome.runtime.id, execute));
 chrome.runtime.onMessage.addListener(createControlListener({
+  "config.export": configOperation(["ui"], (input) => configurations.export(input.ui)),
+  "config.preview": configOperation(["text", "ui"], (input) => configurations.preview(input.text, input.ui)),
+  "config.import": configOperation(["previewId"], (input) => configurations.import(input.previewId)),
+  "config.uiRestore": configOperation([], () => configurations.uiRestore()),
+  "config.missingAccess": configOperation([], () => configurations.missingAccess()),
   "policy.load": wrap(() => sites.load()),
   "policy.save": wrap((message) => sites.save(message.draft, validateExpectedRevision(message.expectedRevision))),
   "activation.apply": wrap(() => coordinator.apply()),

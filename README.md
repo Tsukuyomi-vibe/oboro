@@ -18,6 +18,7 @@ Version: **0.3.1**. The interface defaults to English; Russian remains available
 | Time zone | Default zone for Date/Intl and supported existing Temporal.Now methods; local date construction, parsing, getters and setters |
 | Keyboard map | Native map, US QWERTY, DE QWERTZ or RU JCUKEN through the available `Keyboard.getLayoutMap()` API |
 | Site scope | Explicit site selection or all sites with granted access, with exclusions and optional subdomains |
+| Configuration backup | Local JSON export and import with a preview; support for legacy regional-profile v1 files |
 
 Explicit locale/time-zone arguments and absolute timestamps retain their behavior. Typing, keyboard events, shortcuts and IME retain their system behavior. The [full data reference](info.md) lists individual fields, APIs and limitations in Russian.
 
@@ -58,6 +59,28 @@ Selecting a site and granting Chrome access are separate actions. In the default
 Unsaved edits block applying from that settings page. Saving a changed profile requires applying it again. Conflicts or unconfirmed writes keep your draft and require loading the saved state again.
 
 To restore native APIs, turn off the master switch and reload previously processed pages. The switch removes future registrations and network rules; existing documents keep their wrappers until reload.
+
+## Configuration backup
+
+Open **Configuration backup** in the extension settings. Select **Export saved configuration** to download `oboro-config-<version>.json`. It contains the saved regional profile, site selection mode and rules, interface language and theme, and hints for site access. Unsaved form edits are excluded; exporting leaves your settings and activation state unchanged.
+
+To restore settings:
+
+1. Save or reload any unsaved edits to the profile or site selection mode, then choose a file under **Configuration or legacy profile file (JSON)**.
+2. Review **Import preview**, including the source version and the current and proposed values. **Cancel import** leaves saved settings unchanged.
+3. Select **Import these settings**. After either type of import, overrides remain off. Reload previously processed pages to remove their old overrides.
+4. If **Grant missing access** appears, grant access separately. Complete the Chrome compatibility check if needed, then explicitly apply the restored profile.
+
+| File | What is restored |
+| --- | --- |
+| Full `oboro-config` configuration, schema v1 | Saved profile, site selection mode and rules, interface language/theme, and permission hints |
+| Legacy regional-profile v1 | Profile only; sites, language/theme and permission hints are preserved. The source app version is shown as unknown. |
+
+Importing retains existing Chrome permissions and does not grant access automatically. **All sites with granted access** uses the receiving browser's current grants, which can include sites outside the file. Compatibility reports are not transferred; the existing check for your exact Chrome version still applies.
+
+The current format is `schemaVersion: 1`; each new export also records `oboroVersion` from the extension manifest. A newer exporter using a supported schema is accepted. A future schema or invalid fields are rejected before settings are changed. Conflicting edits require a fresh preview; failed or interrupted writes use saved rollback data, and unresolved recovery blocks further changes. Files must be UTF-8 JSON, at most **1 MiB**.
+
+**Keep configuration files private:** they contain your profile name, coordinates and site lists. Downloads matching `oboro-config-*.json` are excluded by [.gitignore](.gitignore). Runtime activation state, local revision counters, compatibility reports, document IDs and machine/account metadata are omitted. See the [format contract](docs/configuration-format.md) and [v1 JSON Schema](schemas/oboro-config.v1.schema.json) for details.
 
 ## Interface language and theme
 
@@ -115,5 +138,6 @@ The [.gitignore](.gitignore) excludes dependencies, builds, archives, logs, brow
 - [Russian README](README.ru.md)
 - [Main package installation guide](docs/core-package-readme.en.md)
 - [Diagnostic package guide](docs/probe-package-readme.en.md)
+- [Configuration format and compatibility](docs/configuration-format.md), [JSON Schema v1](schemas/oboro-config.v1.schema.json)
 - [Full data reference](info.md), [privacy](docs/privacy.md), [release notes](docs/releases/0.3.1.md) — Russian
 - [Native acceptance matrix](docs/core-acceptance-matrix.json) and [implementation status](docs/i21-i23-validation-status.json)

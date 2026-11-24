@@ -101,6 +101,29 @@
         <div id="site-list" data-i18n="Загрузка списка…">Loading list…</div>
         <details class="granted-origins"><summary data-i18n="Выданные доступы">Granted access</summary><div id="granted-sites" data-i18n="Загрузка…">Loading…</div></details>
       </section>
+      <section class="panel" aria-labelledby="config-title">
+        <h2 id="config-title" data-i18n="Резервная копия конфигурации">Configuration backup</h2>
+        <p class="help" data-i18n="JSON сохраняет профиль, сайты, язык и тему с версией oboro и формата. Он содержит координаты и список сайтов; храните его приватно.">JSON saves your profile, sites, language and theme with the oboro and format versions. It contains coordinates and site lists; keep it private.</p>
+        <button id="export-config" type="button" class="secondary-button" disabled data-i18n="Экспортировать сохранённую конфигурацию">Export saved configuration</button>
+        <label class="report-file"><span data-i18n="Файл конфигурации или старого профиля (JSON)">Configuration or legacy profile file (JSON)</span><input id="import-config-file" type="file" accept="application/json,.json" disabled></label>
+        <p id="config-draft-hint" class="help" data-i18n="Есть несохранённые правки или данные ещё загружаются. Экспорт использует сохранённые значения; перед импортом сохраните или перечитайте правки.">There are unsaved edits or data is still loading. Export uses saved values; save or reload edits before importing.</p>
+        <div id="config-preview" hidden>
+          <h3 class="coverage-heading" data-i18n="Предпросмотр импорта">Import preview</h3>
+          <p id="config-source" class="help"></p>
+          <div class="config-table-scroll"><table class="config-changes"><thead><tr><th data-i18n="Параметр">Setting</th><th data-i18n="Сейчас">Current</th><th data-i18n="Из файла">From file</th></tr></thead><tbody id="config-change-rows"></tbody></table></div>
+          <p id="config-no-changes" class="help" data-i18n="Значения совпадают. Импорт всё равно выключит подмены до отдельного применения.">Values match. Import still disables overrides until you apply separately.</p>
+          <p class="help" data-i18n="Доступы Chrome не переносятся автоматически. После импорта выдайте недостающие доступы отдельной кнопкой. Подмены останутся выключенными.">Chrome access is not transferred automatically. Grant missing access with the separate button after importing. Overrides will remain off.</p>
+          <ul id="config-preview-hints" class="config-origins" hidden></ul>
+          <p id="config-all-granted-note" class="help" hidden data-i18n="Режим всех доступных сайтов использует текущие разрешения этого Chrome, включая адреса вне файла. Импорт не отзывает существующие доступы.">All-sites mode uses this Chrome's current permissions, including addresses outside the file. Import does not revoke existing access.</p>
+          <div class="form-actions"><button id="import-config-confirm" type="button" class="save-button" disabled data-i18n="Импортировать эти настройки">Import these settings</button><button id="import-config-cancel" type="button" data-i18n="Отменить импорт">Cancel import</button></div>
+        </div>
+        <div id="config-access" hidden>
+          <p class="help" data-i18n="Для сохранённой конфигурации нужен доступ к этим адресам. Выдача доступа сама по себе не применяет профиль.">The saved configuration needs access to these addresses. Granting access alone does not apply the profile.</p>
+          <ul id="config-access-list" class="config-origins"></ul>
+          <button id="grant-config-access" class="secondary-button" type="button" disabled data-i18n="Выдать недостающие доступы">Grant missing access</button>
+        </div>
+        <p id="config-feedback" class="feedback" role="status" aria-live="polite"></p>
+      </section>
       <section class="panel" aria-labelledby="capability-title">
         <h2 id="capability-title" data-i18n="Проверка Chrome">Chrome compatibility</h2>
         <p class="help" data-i18n="Перед первым применением загрузите полный отчёт проверки совместимости из Oboro Check. Он подтверждает работу расширения до запуска скриптов сайта в вашей версии Chrome. Ошибка или неполный отчёт оставляют подмены выключенными.">Before applying for the first time, import a full compatibility report from Oboro Check. It verifies that the extension runs before site scripts in your Chrome version. Overrides remain off if the report fails or is incomplete.</p>

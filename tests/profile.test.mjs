@@ -198,7 +198,8 @@ test("I03: JSON-хранилище сохраняет профиль и revision
   assert.equal((await new ProfileRepository(storage).load()).name, "Новый профиль");
   assert.deepEqual(storage.snapshot().unrelated, { keep: 1 });
   assert.equal(storage.snapshot().extensionPreferences.masterEnabled, true);
-  assert.equal(Object.keys(storage.snapshot()).length, 3);
+  assert.equal(storage.snapshot().regionalProfileRevision, next.revision);
+  assert.equal(Object.keys(storage.snapshot()).length, 4);
 });
 
 test("I03: повторное сохранение того же содержимого не создаёт новую revision", async () => {

@@ -4,6 +4,62 @@
 (() => {
   /** @type {Readonly<Record<string, string>>} */
   const messages = Object.freeze({
+    "Режим всех доступных сайтов использует текущие разрешения этого Chrome, включая адреса вне файла. Импорт не отзывает существующие доступы.": "All-sites mode uses this Chrome's current permissions, including addresses outside the file. Import does not revoke existing access.",
+    "Не удалось проверить доступы. Откройте настройки заново и проверьте разрешения Chrome.": "Could not check site access. Reopen settings and check Chrome permissions.",
+    "Конфигурация восстановлена, подмены выключены. Не удалось восстановить интерфейс в этом окне; откройте настройки заново.": "Configuration restored and overrides are off. Could not restore the interface in this window; reopen settings.",
+    "Название профиля": "Profile name",
+    "Выбранные сайты": "Selected sites",
+    "Исключения сайтов": "Site exclusions",
+    "Язык интерфейса": "Interface language",
+    "Ожидается объект конфигурации.": "Expected a configuration object.",
+    "В конфигурации есть неизвестные поля.": "The configuration contains unknown fields.",
+    "В конфигурации указан неподдерживаемый язык интерфейса или тема.": "The configuration contains an unsupported interface language or theme.",
+    "Некорректная подсказка доступа к сайту.": "Invalid site access hint.",
+    "Подсказки доступа должны содержать только HTTP/HTTPS match patterns без пути и порта.": "Access hints must contain only HTTP/HTTPS match patterns without a path or port.",
+    "Допустимо не более 2000 подсказок доступа.": "No more than 2000 access hints are allowed.",
+    "Повреждена запись восстановления интерфейса.": "The interface restoration record is damaged.",
+    "В конфигурации отсутствует корректная версия oboro.": "The configuration is missing a valid oboro version.",
+    "Это не файл конфигурации oboro.": "This is not an oboro configuration file.",
+    "Некорректная версия формата конфигурации.": "Invalid configuration format version.",
+    "Файл использует более новый формат конфигурации. Обновите oboro; настройки не изменены.": "This file uses a newer configuration format. Update oboro; settings have not been changed.",
+    "Версия формата конфигурации не поддерживается.": "This configuration format version is not supported.",
+    "Конфигурация слишком велика: максимум 1 МиБ.": "The configuration is too large: maximum 1 MiB.",
+    "Не удалось прочитать JSON конфигурации.": "Could not read the configuration JSON.",
+    "Повреждён счётчик версий профиля.": "The profile revision counter is damaged.",
+    "Повреждён журнал импорта. Сохранённые данные оставлены без изменений.": "The import journal is damaged. Saved data has been kept unchanged.",
+    "Не удалось подтвердить отключение подмен. Конфигурация не заменена.": "Could not confirm that overrides are off. The configuration was not replaced.",
+    "Не удалось подтвердить запись конфигурации.": "Could not verify the configuration write.",
+    "Не удалось завершить журнал импорта.": "Could not complete the import journal.",
+    "Предпросмотр устарел. Выберите файл и проверьте изменения ещё раз.": "The preview has expired. Select the file and review the changes again.",
+    "Настройки изменились после предпросмотра. Проверьте файл ещё раз; данные не заменены.": "Settings changed after the preview. Review the file again; data was not replaced.",
+    "Достигнут предел версий настроек; конфигурация не заменена.": "The settings revision limit was reached; the configuration was not replaced.",
+    "Результат импорта не подтверждён. Запись заблокирована до восстановления; перезагрузите расширение и проверьте настройки.": "The import result is unconfirmed. Writes are blocked until recovery; reload the extension and check settings.",
+    "Импорт не завершён. Предыдущие настройки восстановлены, подмены выключены.": "Import did not complete. Previous settings were restored and overrides are off.",
+    "Старый файл профиля. Версия oboro неизвестна; сайты, язык и тема сохранятся.": "Legacy profile file. The oboro version is unknown; sites, language and theme will be kept.",
+    "Файл oboro {0}, формат {1}. Будут заменены сохранённые настройки.": "File from oboro {0}, format {1}. Saved settings will be replaced.",
+    "Сохранённая конфигурация передана браузеру для скачивания. Несохранённые правки не включены.": "Saved configuration sent to the browser for download. Unsaved edits are not included.",
+    "Проверьте изменения перед импортом. Данные ещё не изменены.": "Review the changes before importing. No data has been changed yet.",
+    "Импорт отменён. Настройки не изменены.": "Import cancelled. Settings have not been changed.",
+    "Конфигурация восстановлена. Подмены выключены. Проверьте доступы и отдельно примените профиль; ранее обработанные страницы требуют перезагрузки.": "Configuration restored. Overrides are off. Check access and apply the profile separately; previously processed pages need a reload.",
+    "Конфигурация восстановлена, подмены выключены. Язык и тема применены для этого окна; не удалось сохранить выбор интерфейса.": "Configuration restored and overrides are off. Language and theme were applied to this window; the interface choice could not be saved.",
+    "Доступы выданы. Примените профиль отдельно.": "Access granted. Apply the profile separately.",
+    "Доступы не выданы. Конфигурация сохранена, подмены не включены.": "Access was not granted. The configuration is saved and overrides are off.",
+    "Не удалось полностью восстановить настройки интерфейса. Проверьте язык и тему.": "Could not fully restore interface preferences. Check the language and theme.",
+    "Резервная копия конфигурации": "Configuration backup",
+    "JSON сохраняет профиль, сайты, язык и тему с версией oboro и формата. Он содержит координаты и список сайтов; храните его приватно.": "JSON saves your profile, sites, language and theme with the oboro and format versions. It contains coordinates and site lists; keep it private.",
+    "Экспортировать сохранённую конфигурацию": "Export saved configuration",
+    "Файл конфигурации или старого профиля (JSON)": "Configuration or legacy profile file (JSON)",
+    "Есть несохранённые правки или данные ещё загружаются. Экспорт использует сохранённые значения; перед импортом сохраните или перечитайте правки.": "There are unsaved edits or data is still loading. Export uses saved values; save or reload edits before importing.",
+    "Предпросмотр импорта": "Import preview",
+    "Параметр": "Setting",
+    "Сейчас": "Current",
+    "Из файла": "From file",
+    "Значения совпадают. Импорт всё равно выключит подмены до отдельного применения.": "Values match. Import still disables overrides until you apply separately.",
+    "Доступы Chrome не переносятся автоматически. После импорта выдайте недостающие доступы отдельной кнопкой. Подмены останутся выключенными.": "Chrome access is not transferred automatically. Grant missing access with the separate button after importing. Overrides will remain off.",
+    "Импортировать эти настройки": "Import these settings",
+    "Отменить импорт": "Cancel import",
+    "Для сохранённой конфигурации нужен доступ к этим адресам. Выдача доступа сама по себе не применяет профиль.": "The saved configuration needs access to these addresses. Granting access alone does not apply the profile.",
+    "Выдать недостающие доступы": "Grant missing access",
     "Язык": "Language",
     "Тема": "Theme",
     "Как в системе": "System",
@@ -549,5 +605,10 @@
     language = normalize(event.key === null ? null : event.newValue);
     apply();
     for (const message of feedback()) { setText(message, ""); if (message instanceof HTMLElement) message.hidden = true; }
+  });
+  window.addEventListener("oboro:restore-ui", (event) => {
+    const detail = /** @type {CustomEvent<{language?: unknown}>} */ (event).detail;
+    if (!detail || detail.language !== "en" && detail.language !== "ru") return;
+    language = detail.language; apply();
   });
 })();

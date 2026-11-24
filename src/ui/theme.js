@@ -43,6 +43,11 @@
   if (document.readyState === "loading") document.addEventListener("DOMContentLoaded", mount, { once: true });
   else mount();
   media?.addEventListener("change", () => { if (preference === "system") apply(); });
+  window.addEventListener("oboro:restore-ui", (event) => {
+    const detail = /** @type {CustomEvent<{theme?: unknown}>} */ (event).detail;
+    if (!detail || !["system", "light", "dark"].includes(String(detail.theme))) return;
+    preference = normalize(detail.theme); apply();
+  });
   window.addEventListener("storage", (event) => {
     if (event.storageArea !== storage || (event.key !== key && event.key !== null)) return;
     preference = normalize(event.newValue);

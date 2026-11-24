@@ -46,6 +46,7 @@ region-i02-*.json
 oboro-report-*.json
 oboro-diagnostics-*.json
 oboro-profile-*.json
+oboro-config-*.json
 *.regional-profile.json
 !/examples/berlin.regional-profile.json
 *.local.json

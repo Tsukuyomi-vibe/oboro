@@ -12,6 +12,7 @@ const bundles=await Promise.all(['src/options/options.ts','src/background/servic
 const html=await readFile(new URL('../../src/options/options.html',import.meta.url),'utf8');
 const example=JSON.parse(await readFile(new URL('../../examples/berlin.regional-profile.json',import.meta.url),'utf8'));
 const languageScript=await readFile(new URL('../../src/ui/language.js',import.meta.url),'utf8');
+const themeScript=await readFile(new URL('../../src/ui/theme.js',import.meta.url),'utf8');
 const copy=value=>JSON.parse(JSON.stringify(value));
 const extensionId='a'.repeat(32);
 const rule=(host)=>({host,schemes:['https'],includeSubdomains:false});
@@ -22,7 +23,7 @@ function event(convert=(value)=>value){const handlers=[];return {handlers,addLis
 // Actual UI and service worker bundles with in-memory Chrome APIs and synthetic
 // M0/lifecycle/ACK evidence. No extension is installed and no native browser API
 // availability is established by this fixture.
-export function optionsPage({profile=null,policy,origins=[],proof=false,ack=true,language="ru",uiStorage={}}={}){
+export function optionsPage({profile=null,policy,origins=[],proof=false,ack=true,language="ru",uiStorage={},initial={}}={}){
   const dom=new JSDOM(html,{url:`chrome-extension://${extensionId}/options/options.html`,runScripts:'outside-only'});
   const {window}=dom;
   // jsdom treats chrome-extension as opaque; native Chrome provides localStorage.
@@ -30,10 +31,11 @@ export function optionsPage({profile=null,policy,origins=[],proof=false,ack=true
   Object.defineProperty(window,'localStorage',{value:storageDom.window.localStorage});
   for(const [key,value] of Object.entries(uiStorage))window.localStorage.setItem(key,value);
   if(language!==null)window.localStorage.setItem("oboro.language",language);
+  window.eval(themeScript);
   window.eval(languageScript);
   window.document.dispatchEvent(new window.Event("DOMContentLoaded"));
   const uiCopy=value=>window.JSON.parse(JSON.stringify(value));
-  const data={};if(profile)data.regionalProfile=copy(profile);if(policy)data.sitePolicy=copy(policy);
+  const data=copy(initial);if(profile)data.regionalProfile=copy(profile);if(policy)data.sitePolicy=copy(policy);
   if(proof)data.capabilityEvidence={report:syntheticI02Evidence()};
   const session={}; const calls=[]; const messages=[]; const uiChanges=event(uiCopy);
   let worker; const workerCopy=value=>vm.runInContext('JSON.parse('+JSON.stringify(JSON.stringify(value))+')',worker);
@@ -103,6 +105,7 @@ export function optionsPage({profile=null,policy,origins=[],proof=false,ack=true
   const flush=async()=>{for(let turn=0;turn<12;turn++)await new Promise(setImmediate)};
   const set=(name,value)=>{const field=window.document.querySelector(`#profile-form [name="${name}"]`);field.value=value;field.dispatchEvent(new window.Event(field.tagName==='SELECT'?'change':'input',{bubbles:true}))};
   return {window,document:window.document,dom,flush,set,calls,messages,faults,
+    control:(operation,fields={})=>window.chrome.runtime.sendMessage({channel:'regional-control:v1',operation,...fields}),
     snapshot:()=>copy(data),installed:()=>({main:copy(main),bridge:copy(bridge),rules:copy(rules)}),
     externalProfile:async value=>{await baseChrome.storage.local.set(workerCopy({regionalProfile:value}));await flush()},
     externalProfileWithoutEvent:value=>{data.regionalProfile=copy(value)},

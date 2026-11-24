@@ -2,6 +2,7 @@ import { setText, setPlainText } from "./i18n";
 import { loadSitePolicy, saveSitePolicy } from "../control/client";
 import { emptySitePolicy, normalizeSiteRule, policyToDraft, resolveSite, ruleOrigins, type SitePolicy, type SiteRule } from "../sites/policy";
 import { performSiteAction } from "../sites/actions";
+import { SITE_DRAFT_EVENT } from "./profile-events";
 
 export function mountSites(): void {
   const form = document.querySelector<HTMLFormElement>("#site-form");
@@ -19,6 +20,7 @@ export function mountSites(): void {
   const updateMode = (): void => {
     if (modeSelect) { modeSelect.disabled = !loaded || modeBusy; modeSelect.value = pendingMode ?? policy.mode; }
     if (modeSave) modeSave.disabled = !loaded || modeBusy || !pendingMode || pendingMode === policy.mode;
+    window.dispatchEvent(new CustomEvent(SITE_DRAFT_EVENT, { detail: { blocked: Boolean(pendingMode && pendingMode !== policy.mode) } }));
   };
   let refreshVersion = 0;
   const show = (text: string): void => { setText(feedback, text); };

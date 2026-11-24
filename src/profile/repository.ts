@@ -1,4 +1,4 @@
-import { PROFILE_STORAGE_KEY, type ProfileDraft, type RegionalProfile } from "./types";
+import { PROFILE_STORAGE_KEY, PROFILE_REVISION_KEY, type ProfileDraft, type RegionalProfile } from "./types";
 import { createRegionalProfile, parseProfileDraft, parseRegionalProfile, profileToDraft, validateExpectedRevision } from "./validation";
 
 export interface ProfileStorage {
@@ -20,6 +20,15 @@ export class ProfileRevisionConflict extends ProfileRepositoryError {
   }
 }
 
+// Keep a monotonic clock even when an imported empty configuration clears the
+// profile, so stale editors cannot match a reused revision after recreation.
+export async function readProfileRevision(storage: ProfileStorage, minimum: number): Promise<number> {
+  const value = (await storage.get(PROFILE_REVISION_KEY))[PROFILE_REVISION_KEY];
+  if (value === undefined || value === null) return minimum;
+  if (typeof value !== "number" || !Number.isSafeInteger(value) || value < 0) throw new ProfileRepositoryError("INVALID_STORED_PROFILE", "Повреждён счётчик версий профиля.");
+  return Math.max(minimum, value);
+}
+
 /** One instance in the service worker owns all profile writes. UI uses the client API. */
 export class ProfileRepository {
   private pending: Promise<void> = Promise.resolve();
@@ -38,6 +47,11 @@ export class ProfileRepository {
     catch (cause) { throw new ProfileRepositoryError("STORAGE_READ_FAILED", "Не удалось прочитать сохранённый профиль.", { cause }); }
     const value = values[PROFILE_STORAGE_KEY];
     if (value === undefined) return null;
+    if (value === null) {
+      const clock = (await this.storage.get(PROFILE_REVISION_KEY))[PROFILE_REVISION_KEY];
+      if (typeof clock === "number" && Number.isSafeInteger(clock) && clock >= 0) return null;
+      throw new ProfileRepositoryError("INVALID_STORED_PROFILE", "Сохранённый профиль повреждён или использует неподдерживаемую схему. Данные оставлены без изменений.");
+    }
     try { return parseRegionalProfile(value); }
     catch (cause) { throw new ProfileRepositoryError("INVALID_STORED_PROFILE", "Сохранённый профиль повреждён или использует неподдерживаемую схему. Данные оставлены без изменений.", { cause }); }
   }
@@ -55,10 +69,11 @@ export class ProfileRepository {
       const actual = previous?.revision ?? 0;
       if (actual !== expected) throw new ProfileRevisionConflict(expected, actual);
       if (previous && JSON.stringify(profileToDraft(previous)) === JSON.stringify(draft)) return previous;
-      if (actual === Number.MAX_SAFE_INTEGER) throw new ProfileRepositoryError("REVISION_LIMIT", "Достигнут предел revision; профиль не изменён.");
-      const next = createRegionalProfile(draft, actual + 1);
+      const clock = await readProfileRevision(this.storage, actual);
+      if (clock === Number.MAX_SAFE_INTEGER) throw new ProfileRepositoryError("REVISION_LIMIT", "Достигнут предел revision; профиль не изменён.");
+      const next = createRegionalProfile(draft, clock + 1);
       await this.beforeWrite?.();
-      try { await this.storage.set({ [PROFILE_STORAGE_KEY]: next }); }
+      try { await this.storage.set({ [PROFILE_STORAGE_KEY]: next, [PROFILE_REVISION_KEY]: next.revision }); }
       catch (cause) { throw new ProfileRepositoryError("STORAGE_WRITE_FAILED", "Не удалось сохранить профиль. Результат записи нужно проверить повторным чтением.", { cause }); }
       return next;
     });

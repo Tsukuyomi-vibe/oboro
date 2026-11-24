@@ -1,0 +1,30 @@
+{
+  "format": "oboro-config",
+  "schemaVersion": 1,
+  "oboroVersion": "0.3.1",
+  "config": {
+    "profile": {
+      "name": "Berlin demo",
+      "geolocation": {
+        "latitude": 52.52,
+        "longitude": 13.405,
+        "accuracy": 0,
+        "altitude": 0,
+        "altitudeAccuracy": null,
+        "speed": 0,
+        "heading": 0
+      },
+      "languages": ["de-DE", "de", "en-US"],
+      "locale": "de-DE",
+      "timeZone": "Europe/Berlin",
+      "keyboardLayout": "de-qwertz"
+    },
+    "sitePolicy": {
+      "mode": "selected_sites",
+      "include": [{ "host": "example.com", "schemes": ["https"], "includeSubdomains": false }],
+      "exclude": [{ "host": "private.example.com", "schemes": ["https"], "includeSubdomains": true }]
+    },
+    "ui": { "language": "ru", "theme": "dark" }
+  },
+  "permissionHints": { "origins": ["https://example.com/*"] }
+}
