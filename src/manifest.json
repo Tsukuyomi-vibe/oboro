@@ -1,0 +1,24 @@
+{
+  "manifest_version": 3,
+  "name": "oboro",
+  "description": "Language, geolocation, time and keyboard map profiles for selected sites. Built-in settings editor.",
+  "version": "0.3.1",
+  "minimum_chrome_version": "120",
+  "permissions": ["storage", "activeTab", "userScripts", "scripting", "declarativeNetRequestWithHostAccess", "webNavigation"],
+  "optional_host_permissions": ["http://*/*", "https://*/*"],
+  "background": {
+    "service_worker": "background/service-worker.js",
+    "type": "module"
+  },
+  "action": {
+    "default_title": "oboro",
+    "default_popup": "popup/popup.html"
+  },
+  "options_ui": {
+    "page": "options/options.html",
+    "open_in_tab": true
+  },
+  "content_security_policy": {
+    "extension_pages": "script-src 'self'; object-src 'self'"
+  }
+}

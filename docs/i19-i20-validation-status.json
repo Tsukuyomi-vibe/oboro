@@ -1,0 +1,156 @@
+{
+  "range": [
+    "I19",
+    "I20"
+  ],
+  "date": "2026-11-12",
+  "implementation": "READY",
+  "acceptance": "CHROME_ACCEPTANCE_NOT_CONFIRMED",
+  "iterations": {
+    "I19": {
+      "implementation": "READY",
+      "keyboardRuntimeVmChecks": "PASS",
+      "nativeChromeAcceptance": "NOT_CONFIRMED"
+    },
+    "I20": {
+      "implementation": "READY",
+      "optionsDomAndWorkerChecks": "PASS",
+      "nativeChromeAcceptance": "NOT_CONFIRMED",
+      "visualAcceptance": "NOT_CONFIRMED"
+    }
+  },
+  "automatedChecks": {
+    "command": "npm run check",
+    "scope": "I01-I20",
+    "log": null,
+    "typecheck": "PASS",
+    "extensionBuild": "PASS",
+    "probeBuild": "PASS",
+    "packageChecks": "PASS",
+    "testsPassed": 187,
+    "testsFailed": 0,
+    "newTests": 24,
+    "keyboardTests": 9,
+    "frameAckTests": 1,
+    "optionsDomTests": 14,
+    "usesInstalledChromeExtension": false,
+    "keyboardEvidence": "REALM_LOCAL_WEBIDL_SHAPED_TEST_DOUBLE",
+    "uiEvidence": "ACTUAL_OPTIONS_HTML_JS_AND_SERVICE_WORKER_WITH_IN_MEMORY_CHROME_API",
+    "readyFlowEvidence": "EXPLICIT_SYNTHETIC_M0_AND_FRAME_LIFECYCLE_ACK",
+    "environment": {
+      "node": "22.23.2",
+      "icu": "78.2",
+      "tz": "2026a",
+      "jsdom": "31.0.0"
+    },
+    "diagnosticDataRemovedForPrivacy": true
+  },
+  "keyboardContract": {
+    "layoutIds": [
+      "native",
+      "us-qwerty",
+      "de-qwertz",
+      "ru-jcuken"
+    ],
+    "fixedMapSize": 49,
+    "catalogScope": "WINDOWS_PC_UNMODIFIED_WRITING_SYSTEM_KEYS",
+    "legacySchemaV1Default": "native",
+    "automaticLegacyProfileWrite": false,
+    "nativeAccessChecks": "CALLED_FIRST_AND_REJECTIONS_PRESERVED",
+    "maplikeMethods": [
+      "get",
+      "has",
+      "size",
+      "entries",
+      "keys",
+      "values",
+      "forEach",
+      "Symbol.iterator"
+    ],
+    "nativeObjectAndCacheIdentity": "PRESERVED",
+    "trustedSystemLayoutChangeWithFixedMap": "SUPPRESSED",
+    "pageSyntheticEvents": "PRESERVED",
+    "keyboardEventsTypingShortcutsAndIme": "UNCHANGED",
+    "absentApi": "NOT_CREATED",
+    "unsupportedRequestedMapAllowsReady": false
+  },
+  "editorContract": {
+    "allProfileFields": "AVAILABLE",
+    "validationBeforeTransport": true,
+    "optionalEmptyNumbers": "NULL",
+    "zeroValues": "PRESERVED",
+    "decimalComma": "ACCEPTED",
+    "exampleAction": "FILLS_DRAFT_WITHOUT_SAVING",
+    "writes": "SERVICE_WORKER_EXPECTED_REVISION",
+    "dirtyDraftOnExternalChange": "PRESERVED_RELOAD_REQUIRED",
+    "concurrentUpdateDuringSave": "REREAD_AFTER_SAVE",
+    "applyWithUnsavedDraftInOptions": "BLOCKED",
+    "disableWhileEditing": "AVAILABLE",
+    "draftPersistenceAfterClosingOptions": false,
+    "bothSiteModes": "EXPLICIT_UI_WITH_SEPARATE_SAVE",
+    "modeSwitchPermissionsRequests": 0,
+    "includeAndExcludeOnModeSwitch": "PRESERVED",
+    "emptySelectedSites": "NO_SELECTION"
+  },
+  "runtime": {
+    "implementationSignature": 5,
+    "m0Gate": "UNCHANGED_REQUIRED",
+    "keyboardAckRequired": true,
+    "newChromePermissions": []
+  },
+  "dependencies": {
+    "newProductionDependencies": [],
+    "newDevDependencies": {
+      "jsdom": "31.0.0"
+    },
+    "supportedNode": "^22.22.2 || ^24.15.0 || >=26.0.0"
+  },
+  "browser": {
+    "milestoneM0": "NOT_CONFIRMED",
+    "milestoneM2": "CODE_READY_CHROME_ACCEPTANCE_NOT_CONFIRMED",
+    "installationApproval": "GRANTED",
+    "installation": "NOT_COMPLETED",
+    "newBrowserRunDuringI19I20": false,
+    "nativeKeyboardMapApi": "NOT_CONFIRMED",
+    "physicalTypingShortcutsAndIme": "NOT_CONFIRMED",
+    "optionsVisualCheck": "NOT_CONFIRMED",
+    "lastComputerUseFailure": "STOPPED_BECAUSE_CURRENT_BROWSER_URL_COULD_NOT_BE_DETERMINED_RELIABLY"
+  },
+  "artifacts": {
+    "extension": "dist",
+    "diagnosticExtension": "dist-probe",
+    "guide": "docs/i19-i20-implementation.md"
+  },
+  "limitations": [
+    "Installed Chrome acceptance and M0/M2 remain open",
+    "Keyboard catalog is Windows PC; other hardware and modifier layers are outside scope",
+    "Map iterators do not promise native KeyboardLayoutMap iterator branding",
+    "Actual typing, key/code and IME remain system-controlled",
+    "Unsaved profile drafts are local to the current options page",
+    "IP, site storage, workers and complex lifecycle coverage remain outside I19-I20"
+  ],
+  "nextIteration": {
+    "id": "I21",
+    "started": true,
+    "implementation": "READY",
+    "record": "docs/i21-i23-validation-status.json"
+  },
+  "latestAutomatedChecks": {
+    "command": "npm run package:core",
+    "scope": "I01_I22_AND_I23_AUTOMATED_PACKAGE_CHECKS",
+    "log": null,
+    "typecheck": "PASS",
+    "extensionBuild": "PASS",
+    "probeBuild": "PASS",
+    "packageChecks": "PASS",
+    "testsPassed": 214,
+    "testsFailed": 0,
+    "usesInstalledChromeExtension": false,
+    "nativeI23Acceptance": "BLOCKED_NOT_RUN",
+    "diagnosticDataRemovedForPrivacy": true
+  },
+  "laterAuthorizedThrough": "I23",
+  "currentAcceptanceRecord": "docs/i21-i23-validation-status.json",
+  "recordedAtCompletion": "I20",
+  "followingImplementationThrough": "I22"
+}

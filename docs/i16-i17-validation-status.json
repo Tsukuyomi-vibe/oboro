@@ -1,0 +1,125 @@
+{
+  "range": [
+    "I16",
+    "I17"
+  ],
+  "date": "2026-11-12",
+  "implementation": "READY",
+  "acceptance": "CHROME_ACCEPTANCE_NOT_CONFIRMED",
+  "iterations": {
+    "I16": {
+      "implementation": "READY",
+      "constructorAndParser": "PASS",
+      "chromeAcceptance": "NOT_CONFIRMED"
+    },
+    "I17": {
+      "implementation": "READY",
+      "allEightLocalSetters": "PASS",
+      "chromeAcceptance": "NOT_CONFIRMED"
+    }
+  },
+  "automatedChecks": {
+    "command": "npm run check",
+    "log": null,
+    "typecheck": "PASS",
+    "extensionBuild": "PASS",
+    "probeBuild": "PASS",
+    "packageChecks": "PASS",
+    "testsPassed": 141,
+    "testsFailed": 0,
+    "newTests": 22,
+    "constructorParserFixtureTests": 10,
+    "setterTests": 11,
+    "oldCoverageAckTests": 1,
+    "usesInstalledChromeExtension": false,
+    "oracle": "NATIVE_NODE_DATE_IN_ISOLATED_TZ_PROCESSES",
+    "oracleTimeZones": [
+      "UTC",
+      "Europe/Berlin",
+      "America/New_York",
+      "Asia/Kathmandu",
+      "Australia/Lord_Howe",
+      "Pacific/Apia"
+    ],
+    "environment": {
+      "node": "22.23.2",
+      "icu": "78.2",
+      "tz": "2026a"
+    },
+    "diagnosticDataRemovedForPrivacy": true
+  },
+  "dateContract": {
+    "componentDateConstruction": "PROFILE_TIMEZONE",
+    "numericDateConstruction": "NATIVE_TIMESTAMP",
+    "dateCopy": "INTERNAL_DATE_VALUE",
+    "dateOnlyIso": "UTC",
+    "zoneLessIsoDateTime": "PROFILE_TIMEZONE",
+    "explicitOffset": "PRESERVED",
+    "fractionalSeconds": "TRUNCATED_TO_MILLISECONDS",
+    "colonlessOffsetExtension": true,
+    "unknownStrings": "REJECTED_WITH_NAN",
+    "nativeParseFallback": false,
+    "disambiguation": "compatible",
+    "setYearShortYearRule": "1900-1999",
+    "setFullYearLiteralYear": true,
+    "utcSetters": "UNCHANGED",
+    "setTime": "UNCHANGED"
+  },
+  "runtime": {
+    "implementationSignature": 3,
+    "timeCoverage": {
+      "formatting": true,
+      "localRead": true,
+      "construction": true,
+      "parse": true,
+      "localSetters": true,
+      "temporal": false,
+      "complete": false
+    },
+    "successfulPartsStatus": "LIMITED",
+    "moduleInstallation": "ATOMIC_DATE_SURFACES"
+  },
+  "browser": {
+    "milestoneM0": "NOT_CONFIRMED",
+    "installationApproval": "GRANTED",
+    "installation": "NOT_COMPLETED",
+    "newBrowserRunDuringI16I17": false,
+    "lastComputerUseFailure": "STOPPED_BECAUSE_CURRENT_BROWSER_URL_COULD_NOT_BE_DETERMINED_RELIABLY",
+    "nodeOracleIsChromeAcceptance": false
+  },
+  "artifacts": {
+    "extension": "dist",
+    "diagnosticExtension": "dist-probe",
+    "guide": "docs/i16-i17-implementation.md"
+  },
+  "limitations": [
+    "Temporal and full compatibility verification are deferred to I18",
+    "Unknown implementation-specific date strings are rejected",
+    "Historical second-level offsets are not representable in Date.toString GMT minute suffix",
+    "Installed Chrome acceptance and M0 remain open"
+  ],
+  "nextIteration": {
+    "id": "I18",
+    "started": true,
+    "implementation": "READY",
+    "record": "docs/i18-validation-status.json"
+  },
+  "latestAutomatedChecks": {
+    "command": "npm run package:core",
+    "scope": "I01_I22_AND_I23_AUTOMATED_PACKAGE_CHECKS",
+    "log": null,
+    "typecheck": "PASS",
+    "extensionBuild": "PASS",
+    "probeBuild": "PASS",
+    "packageChecks": "PASS",
+    "testsPassed": 214,
+    "testsFailed": 0,
+    "usesInstalledChromeExtension": false,
+    "nativeI23Acceptance": "BLOCKED_NOT_RUN",
+    "diagnosticDataRemovedForPrivacy": true
+  },
+  "recordedAtCompletion": "I17",
+  "followingImplementationThrough": "I22",
+  "laterAuthorizedThrough": "I23",
+  "currentAcceptanceRecord": "docs/i21-i23-validation-status.json"
+}

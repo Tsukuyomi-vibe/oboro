@@ -1,0 +1,45 @@
+<!DOCTYPE html><html lang="en"><head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>oboro</title>
+    <script src="../ui/theme.js"></script><script src="../ui/language.js"></script>
+    <link rel="stylesheet" href="../ui/theme.css">
+    <link rel="stylesheet" href="../ui/styles.css">
+    <script type="module" src="popup.js"></script>
+  </head>
+  <body class="popup">
+    <main class="popup-content">
+      <header class="brand">
+        <span class="brand-mark" aria-hidden="true">o</span>
+        <div>
+          <p class="brand-name">oboro</p>
+          <h1 data-i18n="Ваш регион в браузере">Your region in the browser</h1>
+        </div>
+      </header>
+
+      <section class="status-card" aria-labelledby="status-title">
+        <p class="status" id="status-title"><span class="status-dot" aria-hidden="true"></span><span id="status-label" data-i18n="Загрузка…">Loading…</span></p>
+        <p class="muted" id="activation-details" data-i18n="Чтение состояния расширения…">Reading extension status…</p>
+      </section>
+
+      <div class="toggle-row">
+        <div>
+          <label for="master-enabled" class="field-title" data-i18n="Общий выключатель">Master switch</label>
+          <p class="muted toggle-label" id="master-label" data-i18n="Загрузка…">Loading…</p>
+        </div>
+        <input id="master-enabled" class="switch" type="checkbox" role="switch" aria-describedby="switch-help" disabled="">
+      </div>
+      <p class="help" id="switch-help" data-i18n="Применение перезагрузит выбранные основные страницы. Доступы и ограничения показаны в настройках.">Applying will reload selected top-level pages. See settings for access and coverage limits.</p>
+
+      <button id="select-current-site" class="secondary-button" type="button" disabled="" data-i18n="Определение текущего сайта…">Checking the current site…</button>
+      <button id="open-options" class="primary-button" type="button"><span data-i18n="Открыть настройки">Open settings</span><span aria-hidden="true">↗</span></button>
+      <p id="feedback" class="feedback" role="status" aria-live="polite"></p>
+      <footer class="footer">
+        <div class="interface-controls"><label class="language-control"><span data-i18n="Язык">Language</span><select data-language-select="" aria-describedby="language-feedback"><option value="en" selected="">English</option><option value="ru">Русский</option></select></label><label class="theme-control"><span data-i18n="Тема">Theme</span><select data-theme-select="" aria-describedby="theme-feedback"><option value="system" data-i18n="Как в системе">System</option><option value="light" data-i18n="Светлая">Light</option><option value="dark" data-i18n="Тёмная">Dark</option></select></label></div>
+        <span>v<span id="version">0.3.1</span></span>
+        <span id="theme-feedback" class="theme-feedback" data-theme-feedback="" role="status" hidden=""></span><span id="language-feedback" class="language-feedback" data-language-feedback="" role="status" hidden=""></span>
+      </footer>
+    </main>
+
+
+</body></html>

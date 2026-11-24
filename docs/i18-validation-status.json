@@ -1,0 +1,119 @@
+{
+  "iteration": "I18",
+  "date": "2026-11-12",
+  "implementation": "READY",
+  "acceptance": "CHROME_ACCEPTANCE_NOT_CONFIRMED",
+  "automatedChecks": {
+    "command": "npm run check",
+    "scope": "I01-I18",
+    "log": null,
+    "typecheck": "PASS",
+    "extensionBuild": "PASS",
+    "probeBuild": "PASS",
+    "packageChecks": "PASS",
+    "testsPassed": 163,
+    "testsFailed": 0,
+    "newTests": 22,
+    "temporalTests": 9,
+    "compatibilityAndFixtureTests": 11,
+    "activationAckTests": 2,
+    "usesInstalledChromeExtension": false,
+    "temporalEvidence": "REALM_LOCAL_POLYFILL_TEST_SURROGATE_WITH_ARGUMENT_SPIES",
+    "cloneEvidence": "NATIVE_V8_SERIALIZER_VIA_MESSAGECHANNEL_IN_NODE_VM",
+    "environment": {
+      "node": "22.23.2",
+      "icu": "78.2",
+      "tz": "2026a"
+    },
+    "diagnosticDataRemovedForPrivacy": true
+  },
+  "temporalContract": {
+    "existingModernNowMethods": "PROFILE_DEFAULT_TIMEZONE",
+    "existingKnownOptionalNowMethods": "PROFILE_DEFAULT_WITH_CALENDAR_ARGUMENT_PRESERVED",
+    "explicitZones": "PRESERVED",
+    "instantMethod": "UNCHANGED",
+    "nanosecondPrecision": "PRESERVED",
+    "publicConstructorsAndPrototypes": "UNCHANGED",
+    "absentTemporal": "ACCEPTED_WITHOUT_CREATING_GLOBAL",
+    "latePagePolyfills": "OUT_OF_SCOPE",
+    "unsupportedApi": "WHOLE_TIMEZONE_INSTALLATION_DISABLED"
+  },
+  "dateInterchangeContract": {
+    "jsonAndIso": "NATIVE_UTC_SERIALIZATION",
+    "structuredClone": "UNCHANGED_NATIVE_API_WHEN_PRESENT",
+    "clonedDatePrototype": "RECEIVING_REALM_DATE_PROTOTYPE",
+    "clonedSubclass": "BASE_DATE_WITHOUT_CUSTOM_FIELDS",
+    "timestamp": "PRESERVED",
+    "liveForeignObjects": "METHOD_REALM_DETERMINES_LOCAL_OPERATIONS",
+    "controlRealm": "NATIVE",
+    "sameOriginPolicy": "NOT_BYPASSED"
+  },
+  "runtime": {
+    "implementationSignature": 4,
+    "timeRuntimeFeatureComplete": true,
+    "perDocumentCompleteRequires": [
+      "ALL_FIVE_DATE_CAPABILITIES",
+      "TEMPORAL_INSTALLED_OR_EXPLICITLY_ABSENT",
+      "TIME_COMPATIBILITY_PASSED_WITHOUT_FAILURES",
+      "STRUCTURED_CLONE_PASSED_OR_EXPLICITLY_ABSENT"
+    ],
+    "readyRequires": [
+      "REAL_M0_FOR_CURRENT_CHROME",
+      "CURRENT_API_CHECKS",
+      "FULL_DOCUMENT_AND_LIFECYCLE_VERIFICATION"
+    ],
+    "onFailure": "ROLL_BACK_DATE_INTL_TIMEZONE_AND_TEMPORAL_THEN_INSTALL_LOCALE_ONLY",
+    "reportTelemetryTrusted": false
+  },
+  "browser": {
+    "milestoneM0": "NOT_CONFIRMED",
+    "lastObservedChromeVersion": null,
+    "installationApproval": "GRANTED",
+    "installation": "NOT_COMPLETED",
+    "newBrowserRunDuringI18": false,
+    "nativeTemporalAvailability": "NOT_CONFIRMED",
+    "browserStructuredCloneAcceptance": "NOT_CONFIRMED",
+    "lastComputerUseFailure": "STOPPED_BECAUSE_CURRENT_BROWSER_URL_COULD_NOT_BE_DETERMINED_RELIABLY",
+    "nodeEvidenceIsChromeAcceptance": false,
+    "diagnosticDataRemovedForPrivacy": true
+  },
+  "artifacts": {
+    "extension": "dist",
+    "diagnosticExtension": "dist-probe",
+    "guide": "docs/i18-implementation.md",
+    "fixtureFirstRead": "fixtures/i02/first-read.js"
+  },
+  "limitations": [
+    "Installed Chrome acceptance and M0 remain open",
+    "Public Temporal classes, their formatting and serialization remain native",
+    "Temporal loaded by a page after document_start is not patched",
+    "Unknown implementation-specific Date strings are rejected",
+    "Historical second-level offsets are not losslessly represented by Date GMT minute strings",
+    "Control realms, workers and inaccessible cross-origin contexts are not swept",
+    "Full native indistinguishability is not promised"
+  ],
+  "nextIteration": {
+    "id": "I19",
+    "started": true,
+    "implementation": "READY",
+    "record": "docs/i19-i20-validation-status.json"
+  },
+  "latestAutomatedChecks": {
+    "command": "npm run package:core",
+    "scope": "I01_I22_AND_I23_AUTOMATED_PACKAGE_CHECKS",
+    "log": null,
+    "typecheck": "PASS",
+    "extensionBuild": "PASS",
+    "probeBuild": "PASS",
+    "packageChecks": "PASS",
+    "testsPassed": 214,
+    "testsFailed": 0,
+    "usesInstalledChromeExtension": false,
+    "nativeI23Acceptance": "BLOCKED_NOT_RUN",
+    "diagnosticDataRemovedForPrivacy": true
+  },
+  "recordedAtCompletion": "I18",
+  "followingImplementationThrough": "I22",
+  "laterAuthorizedThrough": "I23",
+  "currentAcceptanceRecord": "docs/i21-i23-validation-status.json"
+}

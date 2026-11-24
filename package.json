@@ -1,0 +1,28 @@
+{
+  "name": "oboro",
+  "version": "0.3.1",
+  "private": true,
+  "description": "oboro: региональный профиль Chrome для выбранных сайтов.",
+  "type": "module",
+  "engines": {
+    "node": "^22.22.2 || ^24.15.0 || >=26.0.0"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "build": "npm run typecheck && node scripts/build.mjs",
+    "build:probe": "npm run typecheck && node scripts/build-probe.mjs",
+    "fixture": "node fixtures/i02/server.mjs",
+    "test": "node --test",
+    "check": "npm run typecheck && node scripts/build.mjs && node scripts/build-probe.mjs && node scripts/check-build.mjs && node scripts/check-probe-build.mjs && npm test",
+    "package:core": "node scripts/verify-and-package.mjs"
+  },
+  "devDependencies": {
+    "@types/chrome": "0.3.7",
+    "esbuild": "0.28.2",
+    "jsdom": "31.0.0",
+    "typescript": "7.0.2"
+  },
+  "dependencies": {
+    "@js-temporal/polyfill": "0.5.1"
+  }
+}

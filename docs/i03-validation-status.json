@@ -1,0 +1,52 @@
+{
+  "iteration": "I03",
+  "date": "2026-11-12",
+  "implementation": "READY",
+  "acceptance": "CHROME_PERSISTENCE_NOT_CONFIRMED",
+  "automatedChecks": {
+    "command": "npm run check",
+    "typecheck": "PASS",
+    "extensionBuild": "PASS",
+    "probeBuild": "PASS",
+    "testsPassed": 36,
+    "newProfileTests": 21,
+    "testsFailed": 0,
+    "jsonRoundTripAndRepositoryRecreation": "PASS",
+    "profileMessageClientIntegration": "PASS",
+    "usesRealChromeStorage": false,
+    "scope": "At completion of I03."
+  },
+  "chrome": {
+    "exactVersion": null,
+    "profilePersistenceAfterExtensionReload": "NOT_RUN",
+    "profilePersistenceAfterBrowserRestart": "NOT_RUN",
+    "optionsVisualCheck": "NOT_RUN",
+    "reason": "Computer Use stopped because it could not determine the current browser URL reliably. Profile UI, real Chrome storage persistence and installed-extension acceptance remain unverified.",
+    "versionObservedDuring": "I04-I10, independently of profile acceptance",
+    "diagnosticDataRemovedForPrivacy": true
+  },
+  "profileSeededAutomatically": false,
+  "newPermissions": [],
+  "siteOverridesEnabled": false,
+  "milestoneM0": "NOT_CONFIRMED",
+  "nextIterationStarted": true,
+  "latestAutomatedChecks": {
+    "command": "npm run package:core",
+    "scope": "I01_I22_AND_I23_AUTOMATED_PACKAGE_CHECKS",
+    "typecheck": "PASS",
+    "extensionBuild": "PASS",
+    "probeBuild": "PASS",
+    "testsPassed": 214,
+    "testsFailed": 0,
+    "usesRealChrome": false,
+    "log": null,
+    "packageChecks": "PASS",
+    "usesInstalledChromeExtension": false,
+    "nativeI23Acceptance": "BLOCKED_NOT_RUN",
+    "diagnosticDataRemovedForPrivacy": true
+  },
+  "laterAuthorizedImplementationThrough": "I23",
+  "newPermissionsScope": "I03 only; current manifest adds API and optional host permissions in I04-I10.",
+  "laterAuthorizedThrough": "I23",
+  "currentAcceptanceRecord": "docs/i21-i23-validation-status.json"
+}

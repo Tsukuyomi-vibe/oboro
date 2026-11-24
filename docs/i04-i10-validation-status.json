@@ -1,0 +1,148 @@
+{
+  "range": [
+    "I04",
+    "I05",
+    "I06",
+    "I07",
+    "I08",
+    "I09",
+    "I10"
+  ],
+  "date": "2026-11-12",
+  "implementation": "READY",
+  "acceptance": "CHROME_ACCEPTANCE_NOT_CONFIRMED",
+  "iterations": {
+    "I04": {
+      "implementation": "READY",
+      "algorithmAcceptance": "PASS"
+    },
+    "I05": {
+      "implementation": "READY",
+      "chromeAcceptance": "NOT_RUN"
+    },
+    "I06": {
+      "implementation": "READY",
+      "automatedRuntimeChecks": "PASS",
+      "chromeAcceptance": "NOT_RUN"
+    },
+    "I07": {
+      "implementation": "READY",
+      "automatedCompilerChecks": "PASS",
+      "chromeAcceptance": "NOT_RUN"
+    },
+    "I08": {
+      "implementation": "READY",
+      "automatedCoordinatorChecks": "PASS",
+      "chromeAcceptance": "NOT_RUN"
+    },
+    "I09": {
+      "implementation": "READY",
+      "automatedFrameChecks": "PASS",
+      "chromeAcceptance": "NOT_RUN"
+    },
+    "I10": {
+      "implementation": "READY",
+      "automatedGeolocationChecks": "PASS",
+      "chromeAcceptance": "NOT_RUN"
+    }
+  },
+  "automatedChecks": {
+    "command": "npm run check",
+    "typecheck": "PASS",
+    "extensionBuild": "PASS",
+    "probeBuild": "PASS",
+    "packageChecks": "PASS",
+    "testsPassed": 78,
+    "testsFailed": 0,
+    "environment": {
+      "node": "22.23.2",
+      "npm": "10.9.8",
+      "typescript": "7.0.2",
+      "esbuild": "0.28.2"
+    },
+    "chromeApiTests": "MOCKS",
+    "pageRuntimeTests": "NODE_VM",
+    "fixtureTests": "REAL_LOOPBACK_HTTP",
+    "usesInstalledChromeExtension": false
+  },
+  "browser": {
+    "exactVersion": null,
+    "partialObservation": {
+      "status": "REMOVED_FOR_PRIVACY",
+      "isCompleteAcceptance": false
+    },
+    "installedExtensionAcceptance": "NOT_RUN",
+    "userScriptsMainDocumentStart": "NOT_RUN",
+    "allowUserScriptsToggle": "NOT_RUN",
+    "dnrFirstDocumentRequest": "NOT_RUN",
+    "dnrFetchAndRedirects": "NOT_RUN",
+    "iframeIsolation": "NOT_RUN",
+    "geolocationPermissionDialog": "NOT_RUN",
+    "uiVisualCheck": "NOT_RUN",
+    "offAndReload": "NOT_RUN",
+    "limitation": "Computer Use stopped because it could not reliably determine the current browser URL on Windows. No further browser control was attempted.",
+    "diagnosticDataRemovedForPrivacy": true
+  },
+  "milestoneM0": "NOT_CONFIRMED",
+  "milestoneM1": "NOT_CONFIRMED",
+  "activationGate": {
+    "completeRealI02EvidenceRequired": true,
+    "exactCurrentChromeVersionRequired": true,
+    "currentProductApiChecksRequired": true,
+    "lateInjectionFallback": false
+  },
+  "permissions": {
+    "required": [
+      "storage",
+      "activeTab",
+      "userScripts",
+      "scripting",
+      "declarativeNetRequestWithHostAccess",
+      "webNavigation"
+    ],
+    "optionalHostPatterns": [
+      "http://*/*",
+      "https://*/*"
+    ],
+    "requiredHostPatterns": [],
+    "staticContentScripts": false
+  },
+  "artifacts": {
+    "extension": "dist",
+    "diagnosticExtension": "dist-probe",
+    "guide": "docs/i04-i10-implementation.md",
+    "plan": "chrome-region-extension-implementation-plan.md"
+  },
+  "limitations": [
+    "watchPosition and clearWatch remain native until I11 and may return real positions",
+    "No Date/Intl/timezone, regional format, keyboard map, IP or site-storage overrides",
+    "Opaque documents and workers are not covered",
+    "Full native indistinguishability is not promised",
+    "M0 evidence import is user-attested, not cryptographically authenticated"
+  ],
+  "nextIteration": {
+    "id": "I11",
+    "started": true,
+    "implementation": "READY",
+    "record": "docs/i11-i15-validation-status.json"
+  },
+  "latestAutomatedChecks": {
+    "command": "npm run package:core",
+    "scope": "I01_I22_AND_I23_AUTOMATED_PACKAGE_CHECKS",
+    "typecheck": "PASS",
+    "extensionBuild": "PASS",
+    "probeBuild": "PASS",
+    "testsPassed": 214,
+    "testsFailed": 0,
+    "usesRealChrome": false,
+    "log": null,
+    "packageChecks": "PASS",
+    "usesInstalledChromeExtension": false,
+    "nativeI23Acceptance": "BLOCKED_NOT_RUN",
+    "diagnosticDataRemovedForPrivacy": true
+  },
+  "recordedAtCompletion": "I10",
+  "followingImplementationThrough": "I22",
+  "laterAuthorizedThrough": "I23",
+  "currentAcceptanceRecord": "docs/i21-i23-validation-status.json"
+}

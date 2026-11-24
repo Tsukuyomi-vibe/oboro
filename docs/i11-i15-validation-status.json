@@ -1,0 +1,139 @@
+{
+  "range": [
+    "I11",
+    "I12",
+    "I13",
+    "I14",
+    "I15"
+  ],
+  "date": "2026-11-12",
+  "implementation": "READY",
+  "acceptance": "CHROME_ACCEPTANCE_NOT_CONFIRMED",
+  "iterations": {
+    "I11": {
+      "implementation": "READY",
+      "automatedWatchChecks": "PASS",
+      "chromeAcceptance": "NOT_CONFIRMED"
+    },
+    "I12": {
+      "implementation": "READY",
+      "automatedLocaleChecks": "PASS",
+      "chromeAcceptance": "NOT_CONFIRMED"
+    },
+    "I13": {
+      "implementation": "READY",
+      "calendarGoldenVectors": "PASS",
+      "runtimeSelfCheck": true,
+      "sourceRules": "Native browser Intl/ICU IANA",
+      "chromeAcceptance": "NOT_CONFIRMED"
+    },
+    "I14": {
+      "implementation": "READY",
+      "automatedTimezoneFormattingChecks": "PASS",
+      "chromeAcceptance": "NOT_CONFIRMED"
+    },
+    "I15": {
+      "implementation": "READY",
+      "automatedDateReadChecks": "PASS",
+      "chromeAcceptance": "NOT_CONFIRMED"
+    }
+  },
+  "automatedChecks": {
+    "command": "npm run check",
+    "log": null,
+    "typecheck": "PASS",
+    "extensionBuild": "PASS",
+    "probeBuild": "PASS",
+    "packageChecks": "PASS",
+    "licenses": "PASS",
+    "testsPassed": 119,
+    "testsFailed": 0,
+    "newTests": 41,
+    "usesInstalledChromeExtension": false,
+    "environment": {
+      "node": "22.23.2",
+      "npm": "10.9.8",
+      "icu": "78.2",
+      "tz": "2026a",
+      "v8": "12.4.254.21-node.56"
+    },
+    "chromeApiTests": "MOCKS",
+    "pageRuntimeTests": "NODE_VM",
+    "fixtureTests": "REAL_LOOPBACK_HTTP",
+    "diagnosticDataRemovedForPrivacy": true
+  },
+  "calendar": {
+    "component": "@js-temporal/polyfill",
+    "version": "0.5.1",
+    "transitiveJsbiVersion": "4.3.2",
+    "bundledLocally": true,
+    "globalTemporalInstalled": false,
+    "disambiguation": "compatible",
+    "embeddedTzdb": false
+  },
+  "timeCoverage": {
+    "formatting": true,
+    "localRead": true,
+    "construction": false,
+    "parse": false,
+    "localSetters": false,
+    "temporal": false,
+    "complete": false
+  },
+  "activation": {
+    "successfulInstalledPartsStatus": "LIMITED",
+    "pendingMayCommit": true,
+    "milestoneM0": "NOT_CONFIRMED",
+    "fullRealI02EvidenceRequired": true,
+    "currentChromeApiChecksRequired": true,
+    "lateInjectionFallback": false
+  },
+  "browser": {
+    "knownVersionFromPreviousRange": null,
+    "installedExtensionAcceptance": "NOT_CONFIRMED",
+    "geolocationWatchAndPermissionDialog": "NOT_CONFIRMED",
+    "defaultLocaleAndTimezone": "NOT_CONFIRMED",
+    "localDateReads": "NOT_CONFIRMED",
+    "uiVisualCheck": "NOT_CONFIRMED",
+    "reason": "Native browser acceptance evidence is unavailable; installation was not completed.",
+    "installation": "NOT_COMPLETED",
+    "diagnosticDataRemovedForPrivacy": true,
+    "chromeApiAvailabilityEstablished": false
+  },
+  "artifacts": {
+    "extension": "dist",
+    "diagnosticExtension": "dist-probe",
+    "guide": "docs/i11-i15-implementation.md",
+    "licenses": "dist/third-party"
+  },
+  "limitations": [
+    "Date construction/parse/local setters and existing Temporal remain native until I16-I18",
+    "Fixed-profile watch emits no artificial motion; no periodic retry timer",
+    "pagehide clears watchers; BFCache subscription restoration is not covered",
+    "Real Chrome acceptance and milestone M0 remain unconfirmed"
+  ],
+  "nextIteration": {
+    "id": "I16",
+    "started": true,
+    "implementation": "READY",
+    "record": "docs/i16-i17-validation-status.json"
+  },
+  "recordedAtCompletion": "I15",
+  "followingImplementationThrough": "I22",
+  "latestAutomatedChecks": {
+    "command": "npm run package:core",
+    "scope": "I01_I22_AND_I23_AUTOMATED_PACKAGE_CHECKS",
+    "typecheck": "PASS",
+    "extensionBuild": "PASS",
+    "probeBuild": "PASS",
+    "testsPassed": 214,
+    "testsFailed": 0,
+    "usesInstalledChromeExtension": false,
+    "log": null,
+    "packageChecks": "PASS",
+    "nativeI23Acceptance": "BLOCKED_NOT_RUN",
+    "diagnosticDataRemovedForPrivacy": true
+  },
+  "laterAuthorizedThrough": "I23",
+  "currentAcceptanceRecord": "docs/i21-i23-validation-status.json"
+}

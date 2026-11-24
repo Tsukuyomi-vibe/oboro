@@ -1,0 +1,12 @@
+{
+  "httpPort": 8787,
+  "httpsPort": 8788,
+  "probeHeader": "X-Region-I02-Probe",
+  "acceptLanguage": "en-XA,en;q=0.9",
+  "hosts": [
+    { "host": "selected.localhost", "role": "selected", "label": "Выбранный сайт", "selected": true },
+    { "host": "app.selected.localhost", "role": "subdomain", "label": "Выбранный поддомен", "selected": true },
+    { "host": "excluded.selected.localhost", "role": "excluded", "label": "Исключённый поддомен", "selected": false },
+    { "host": "control.localhost", "role": "control", "label": "Посторонний сайт", "selected": false }
+  ]
+}

@@ -1,0 +1,73 @@
+{
+  "iteration": "I02",
+  "date": "2026-11-12",
+  "implementation": "READY",
+  "acceptance": "NOT_CONFIRMED",
+  "milestoneM0": "NOT_CONFIRMED",
+  "artifacts": {
+    "extension": "dist",
+    "diagnosticExtension": "dist-probe",
+    "fixture": "fixtures/i02",
+    "procedure": "docs/i02-test-stand.md"
+  },
+  "automatedChecks": {
+    "command": "npm run check",
+    "typecheck": "PASS",
+    "extensionBuild": "PASS",
+    "probeBuild": "PASS",
+    "testsPassed": 15,
+    "testsFailed": 0,
+    "usesRealChrome": false,
+    "scope": "At completion of I02; latest full check is recorded separately."
+  },
+  "chrome": {
+    "exactVersion": null,
+    "installation": "NOT_RUN",
+    "baselineWithoutExtension": "INCOMPLETE_NOT_ATTESTED",
+    "secureContext": "PASS_IN_FIVE_OBSERVED_HTTP_LOCALHOST_DOCUMENTS",
+    "userScriptsMainDocumentStart": "NOT_RUN",
+    "allowUserScriptsToggle": "NOT_RUN",
+    "dnrFirstDocumentRequest": "NOT_RUN",
+    "dnrFetch": "NOT_RUN",
+    "selectedAndControlFrames": "NOT_RUN",
+    "offAndReload": "NOT_RUN",
+    "reason": "Chrome version and partial fixture observations were obtained. Computer Use then stopped because it could not determine the current browser URL on Windows reliably enough to enforce policy. No installed-extension API acceptance was performed.",
+    "exactVersionObservedDuring": "I04-I10",
+    "partialNativeObservation": {
+      "status": "REMOVED_FOR_PRIVACY",
+      "isCompleteAcceptance": false
+    },
+    "diagnosticDataRemovedForPrivacy": true
+  },
+  "https": {
+    "implemented": true,
+    "testedWithTrustedCertificate": false
+  },
+  "dependentIterationsAwaitingChromeEvidence": [
+    "I06",
+    "I07",
+    "I13"
+  ],
+  "nextIterationStarted": true,
+  "latestAutomatedChecks": {
+    "command": "npm run package:core",
+    "scope": "I01_I22_AND_I23_AUTOMATED_PACKAGE_CHECKS",
+    "typecheck": "PASS",
+    "extensionBuild": "PASS",
+    "probeBuild": "PASS",
+    "testsPassed": 214,
+    "testsFailed": 0,
+    "usesRealChrome": false,
+    "log": null,
+    "packageChecks": "PASS",
+    "usesInstalledChromeExtension": false,
+    "nativeI23Acceptance": "BLOCKED_NOT_RUN",
+    "diagnosticDataRemovedForPrivacy": true
+  },
+  "laterAuthorizedImplementation": {
+    "through": "I23",
+    "dependentRuntimeActivation": "BLOCKED_UNTIL_COMPLETE_REAL_I02_EVIDENCE_AND_CURRENT_API_CHECKS"
+  },
+  "laterAuthorizedThrough": "I23",
+  "currentAcceptanceRecord": "docs/i21-i23-validation-status.json"
+}

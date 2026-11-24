@@ -1,0 +1,42 @@
+<!DOCTYPE html><html lang="en"><head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title data-i18n="Диагностика oboro — Oboro Check">oboro diagnostics — Oboro Check</title>
+    <script src="../ui/theme.js"></script><script src="../ui/language.js"></script>
+    <link rel="stylesheet" href="../ui/theme.css">
+    <link rel="stylesheet" href="../ui/styles.css">
+    <link rel="stylesheet" href="probe.css">
+    <script type="module" src="probe.js"></script>
+  </head>
+  <body class="options">
+    <main class="probe-content">
+      <header class="brand"><span class="brand-mark" aria-hidden="true">o</span><div><p class="brand-name">oboro</p><h1 data-i18n="Проверка совместимости Chrome">Chrome compatibility check</h1></div><div class="interface-controls"><label class="language-control"><span data-i18n="Язык">Language</span><select data-language-select="" aria-describedby="language-feedback"><option value="en" selected="">English</option><option value="ru">Русский</option></select></label><label class="theme-control"><span data-i18n="Тема">Theme</span><select data-theme-select="" aria-describedby="theme-feedback"><option value="system" data-i18n="Как в системе">System</option><option value="light" data-i18n="Светлая">Light</option><option value="dark" data-i18n="Тёмная">Dark</option></select></label></div></header>
+      <p id="theme-feedback" class="theme-feedback" data-theme-feedback="" role="status" hidden=""></p><p id="language-feedback" class="language-feedback" data-language-feedback="" role="status" hidden=""></p>
+      <section class="panel">
+        <h2 data-i18n="Проверка только на локальном стенде">Local fixture checks only</h2>
+        <p class="muted" data-i18n="Обычная сборка расширения не участвует в этой пробе. Здесь устанавливаются MAIN-маркер и тестовый Accept-Language только для выбранных localhost-адресов. Языки браузера, время и геолокация не подменяются.">The regular extension build is not involved in this probe. A MAIN marker and test Accept-Language are installed only for selected localhost addresses. Browser languages, time and geolocation are not overridden.</p>
+        <ol>
+          <li><span data-i18n="Запустите">Run</span><code>npm run fixture</code><span data-i18n="и откройте четыре адреса стенда без установленной диагностической сборки. Сохраните серверный отчёт исходного запуска по инструкции.">and open the four fixture addresses without the diagnostic build installed. Save the server baseline report as instructed.</span></li>
+          <li data-i18n="После установки этой сборки проверьте API с выключенным и включённым переключателем Chrome. Укажите наблюдаемое состояние ниже; после изменения переключателя обновите эту страницу.">After installing this build, check the API with the Chrome toggle off and on. Record the observed state below; reload this page after changing the toggle.</li>
+          <li data-i18n="Подготовьте baseline, откройте все четыре ссылки, дождитесь записи наблюдений и соберите отчёт.">Prepare a baseline, open all four links, wait for observations to be recorded and collect the report.</li>
+          <li data-i18n="Зарегистрируйте пробу, откройте четыре ссылки armed и соберите отчёт.">Arm the probe, open the four armed links and collect the report.</li>
+          <li data-i18n="Снимите пробу, откройте четыре ссылки off и снова соберите отчёт. Экспортируйте JSON.">Remove the probe, open the four off links and collect the report again. Export the JSON.</li>
+        </ol>
+        <p class="help" data-i18n="Chrome 138+: «Allow User Scripts / Разрешить пользовательские скрипты» в сведениях о расширении; ранее — Developer mode. Этот инструмент не меняет переключатель Chrome и не использует позднюю инъекцию.">Chrome 138+: enable “Allow User Scripts” in extension details; earlier versions use Developer mode. This tool does not change the Chrome toggle or use late injection.</p>
+      </section>
+      <section class="panel">
+        <h2 data-i18n="Проверки">Checks</h2>
+        <div class="probe-fields">
+          <label><span data-i18n="Протокол нового baseline">Protocol for new baseline</span><select id="scheme"><option value="http">HTTP · 8787 (localhost secure context)</option><option value="https" data-i18n="HTTPS · 8788 (с вашим сертификатом)">HTTPS · 8788 (with your certificate)</option></select></label>
+          <label><span data-i18n="Переключатель Chrome: наблюдение пользователя">Chrome toggle: user observation</span><select id="toggle-observed"><option value="not-recorded" data-i18n="Не проверено">Not checked</option><option value="off" data-i18n="Выключен">Off</option><option value="on" data-i18n="Включён">On</option></select></label>
+        </div>
+        <label class="native-file"><span data-i18n="Исходный JSON, сохранённый без диагностической сборки">Baseline JSON saved without the diagnostic build</span><input id="native-baseline" type="file" accept="application/json,.json" disabled=""></label>
+        <div class="probe-buttons"><button id="inspect" type="button" disabled="" data-i18n="Проверить API">Check APIs</button><button id="baseline" type="button" disabled="" data-i18n="Подготовить baseline">Prepare baseline</button><button id="arm" type="button" disabled="" data-i18n="Зарегистрировать пробу">Arm probe</button><button id="stop" type="button" disabled="" data-i18n="Снять пробу">Remove probe</button><button id="collect" type="button" disabled="" data-i18n="Собрать отчёт">Collect report</button><button id="export" type="button" disabled="" data-i18n="Экспортировать JSON">Export JSON</button></div>
+        <p id="feedback" class="feedback" role="status" aria-live="polite"></p>
+        <div id="fixture-links"></div>
+      </section>
+      <section class="panel"><h2 data-i18n="Наблюдаемый результат">Observed result</h2><p class="help" data-i18n="CONFIRMED появляется только при наличии исходного отчёта без диагностической сборки, проверок baseline/armed/off, одной точной версии Chrome и проверенного переключателя. NOT_RUN и INCOMPLETE не считаются успешным результатом.">CONFIRMED requires a baseline report without the diagnostic build, baseline/armed/off checks, one exact Chrome version and a verified toggle. NOT_RUN and INCOMPLETE do not count as success.</p><pre id="output" data-i18n="Проверка API…">Checking APIs…</pre></section>
+    </main>
+
+
+</body></html>

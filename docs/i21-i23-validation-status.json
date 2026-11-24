@@ -1,0 +1,140 @@
+{
+  "range": [
+    "I21",
+    "I22",
+    "I23"
+  ],
+  "date": "2026-11-12",
+  "packageVersion": "0.2.0",
+  "implementation": "I21_I22_READY_I23_PACKAGE_CANDIDATE",
+  "acceptance": "CHROME_STABLE_BETA_NOT_CONFIRMED",
+  "iterations": {
+    "I21": {
+      "implementation": "READY",
+      "automatedRecoveryChecks": "PASS",
+      "nativeChromeAcceptance": "NOT_CONFIRMED"
+    },
+    "I22": {
+      "implementation": "READY",
+      "automatedLifecycleAndBoundaryChecks": "PASS",
+      "nativeChromeAcceptance": "NOT_CONFIRMED"
+    },
+    "I23": {
+      "package": "READY",
+      "staticAndAutomatedChecks": "PASS",
+      "nativeStableBetaMatrix": "BLOCKED_NOT_RUN",
+      "complete": false
+    }
+  },
+  "automatedChecks": {
+    "command": "npm run package:core",
+    "includes": "npm run check",
+    "scope": "I01_I22_AND_I23_AUTOMATED_PACKAGE_CHECKS",
+    "log": null,
+    "typecheck": "PASS",
+    "extensionBuild": "PASS",
+    "probeBuild": "PASS",
+    "packageChecks": "PASS",
+    "testsPassed": 214,
+    "testsFailed": 0,
+    "newTests": 27,
+    "recoveryTests": 11,
+    "lifecycleFrameTests": 7,
+    "lifecycleBridgeWorkerAndDomTests": 6,
+    "archiveAndSecurityTests": 3,
+    "usesInstalledChromeExtension": false,
+    "syntheticM0AndAckAreNativeEvidence": false,
+    "environment": {
+      "node": "22.23.2",
+      "icu": "78.2",
+      "tz": "2026a",
+      "jsdom": "31.0.0"
+    },
+    "diagnosticDataRemovedForPrivacy": true
+  },
+  "recovery": {
+    "journalKey": "activationJournal",
+    "snapshotKey": "activationSnapshot",
+    "journalContainsExecutableCode": false,
+    "phases": [
+      "prepared",
+      "awaiting_documents"
+    ],
+    "preparedRecovery": "RESTORE_ONLY_CURRENT_VERIFIED_PREVIOUS_SNAPSHOT_OR_CLEAR",
+    "awaitingDocumentsRecovery": "REVERIFY_ACTUAL_REGISTRATIONS_AND_NATIVE_DOCUMENT_IDENTITIES",
+    "offAndOrphans": "VERIFY_OWNED_CLEAR_WITHOUT_REQUIRING_ACTIVE_SNAPSHOT",
+    "update": "RECOMPILE_CURRENT_PACKAGE_AND_NEW_ACTIVATION_ID_WHEN_BUILD_OR_REGISTRATIONS_CHANGE",
+    "permissionChangeDuringApply": "INVALIDATES_IN_PROGRESS_EPOCH",
+    "unconfirmedWrite": "NO_READY",
+    "unchangedAck": "NO_ACTIVATION_WRITE_LOOP",
+    "mutationQueue": "SHARED_SERVICE_WORKER_CONFIGURATION_QUEUE"
+  },
+  "lifecycle": {
+    "runtimeImplementation": 6,
+    "nativeSenderOriginRequired": true,
+    "opaqueOrUnknownMainOrigin": "SKIPPED_BEFORE_PATCHING",
+    "bfcacheReturn": "RETAINS_ORIGINAL_ACTIVATION_AND_REVISIONS",
+    "staleCachedDocument": "RELOAD_OR_CLOSE_REQUIRED",
+    "spa": "SAME_DOCUMENT_NO_REINSTALL",
+    "newRootDocument": "NATIVE_COMPLETION_REQUIRED",
+    "destroyedParent": "CHILDREN_REMOVED_WITHOUT_FALSE_BFCACHE",
+    "incompleteLedger": "NO_COMPLETE",
+    "mainTelemetryTrusted": false,
+    "workerInjection": "UNSUPPORTED_EXPLICITLY_SHOWN"
+  },
+  "browser": {
+    "milestoneM0": "NOT_CONFIRMED",
+    "milestoneM2": "NOT_CONFIRMED",
+    "milestoneM3": "NOT_CONFIRMED",
+    "matrix": "docs/core-acceptance-matrix.json",
+    "inventory": {
+      "googleChrome": "DISCOVERED",
+      "beta": "NOT_DISCOVERED_IN_AVAILABLE_APP_INVENTORY"
+    },
+    "newBrowserReadAttempt": true,
+    "newBrowserInput": false,
+    "installationApproval": "GRANTED_RETAINED",
+    "installation": "NOT_PERFORMED_DURING_THIS_ITERATION",
+    "stableExactBuild": null,
+    "betaExactBuild": null,
+    "previousObservedBuild": null,
+    "previousBuildIsCurrentEvidence": false,
+    "computerUse": "STOPPED_BY_CURRENT_URL_CONFIDENCE_POLICY",
+    "failure": "Computer Use could not determine the current browser URL on Windows with enough confidence to enforce policy.",
+    "nativeMatrixRuns": 0,
+    "diagnosticDataRemovedForPrivacy": true
+  },
+  "package": {
+    "signed": false,
+    "published": false,
+    "acceptanceComplete": false,
+    "newProductionDependencies": [],
+    "newChromePermissions": [],
+    "cookiesOrDebuggerRequired": false,
+    "remoteExecutableCode": false,
+    "containsSyntheticEvidenceFiles": false
+  },
+  "artifacts": {
+    "extension": "dist",
+    "diagnosticExtension": "dist-probe",
+    "coreZip": "artifacts/release/regional-profile-0.2.0.zip",
+    "probeZip": "artifacts/release/regional-profile-probe-0.2.0.zip",
+    "releaseManifest": "artifacts/release/release-manifest.json",
+    "checksums": "artifacts/release/SHA256SUMS.txt",
+    "guide": "docs/i21-i23-implementation.md"
+  },
+  "limitations": [
+    "I23 real Chrome Stable/Beta acceptance is blocked and incomplete",
+    "M0/M2/M3 are not confirmed by Node/VM/DOM or synthetic ACK",
+    "Cached or unconfirmed departed documents can require return/reload or closing the tab",
+    "UserScripts-toggle changes are detected on subsequent checks/events",
+    "Workers and opaque or inaccessible contexts do not receive base injection",
+    "Geolocation watchers are cleared on pagehide; automatic BFCache subscription restoration is not promised",
+    "Diagnostics do not prove absence of all leaks",
+    "Site-storage adapters, IP and full native indistinguishability remain outside the core package"
+  ],
+  "nextIteration": {
+    "id": "I24",
+    "started": false
+  }
+}

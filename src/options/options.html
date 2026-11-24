@@ -1,0 +1,120 @@
+<!DOCTYPE html><html lang="en"><head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title data-i18n="Настройки — oboro">Settings — oboro</title>
+    <script src="../ui/theme.js"></script><script src="../ui/language.js"></script>
+    <link rel="stylesheet" href="../ui/theme.css">
+    <link rel="stylesheet" href="../ui/styles.css">
+    <script type="module" src="options.js"></script>
+  </head>
+  <body class="options">
+    <main class="options-content">
+      <header class="brand">
+        <span class="brand-mark" aria-hidden="true">o</span>
+        <div>
+          <p class="brand-name">oboro</p>
+          <p class="muted" data-i18n="Настройки расширения">Extension settings</p>
+        </div>
+        <div class="interface-controls"><label class="language-control"><span data-i18n="Язык">Language</span><select data-language-select="" aria-describedby="language-feedback"><option value="en" selected="">English</option><option value="ru">Русский</option></select></label><label class="theme-control"><span data-i18n="Тема">Theme</span><select data-theme-select="" aria-describedby="theme-feedback"><option value="system" data-i18n="Как в системе">System</option><option value="light" data-i18n="Светлая">Light</option><option value="dark" data-i18n="Тёмная">Dark</option></select></label></div>
+      </header>
+      <p id="theme-feedback" class="theme-feedback" data-theme-feedback="" role="status" hidden=""></p><p id="language-feedback" class="language-feedback" data-language-feedback="" role="status" hidden=""></p>
+
+      <div class="page-heading">
+        <h1><span data-i18n="Один профиль.">One profile.</span><br><span data-i18n="Выбранные вами сайты.">The sites you choose.</span></h1>
+        <p class="muted" data-i18n="Настройте языки, геолокацию, форматы, часовой пояс и карту раскладки. Сохраните профиль, выберите сайты и примените изменения. Явные часовые пояса сохраняются; неоднозначные строки дат вроде 01/02/2024 не разбираются.">Set languages, geolocation, formats, time zone and keyboard map. Save a profile, choose sites and apply your changes. Explicit time zones are preserved; ambiguous date strings such as 01/02/2024 are not parsed.</p>
+      </div>
+
+      <section class="panel" aria-labelledby="control-title">
+        <div class="panel-heading">
+          <h2 id="control-title" data-i18n="Состояние расширения">Extension status</h2>
+          <p class="status"><span class="status-dot" aria-hidden="true"></span><span id="status-label" data-i18n="Загрузка…">Loading…</span></p>
+        </div>
+        <div class="toggle-row">
+          <div>
+            <label for="master-enabled" class="field-title" data-i18n="Общий выключатель">Master switch</label>
+            <p class="muted toggle-label" id="master-label" data-i18n="Загрузка…">Loading…</p>
+          </div>
+          <input id="master-enabled" class="switch" type="checkbox" role="switch" aria-describedby="switch-help" disabled="">
+        </div>
+        <p class="help" id="switch-help" data-i18n="Применение перезагрузит выбранные основные страницы. Для уже открытых iframe на других сайтах может потребоваться ручная перезагрузка.">Applying will reload selected top-level pages. Existing cross-site iframes may need a manual reload.</p>
+        <p id="activation-details" class="help" role="status" aria-live="polite"></p>
+        <p id="active-profile" class="help" role="status" aria-live="polite"></p>
+        <button id="apply-profile" class="secondary-button" type="button" data-i18n="Применить и перезагрузить выбранные страницы">Apply and reload selected pages</button>
+        <div id="reload-tabs" class="reload-tabs"></div>
+        <p id="recovery-state" class="help" role="status" aria-live="polite"></p>
+        <button id="retry-cleanup" class="secondary-button" type="button" hidden="" data-i18n="Отключить и повторить очистку">Disable and retry cleanup</button>
+        <p id="feedback" class="feedback" role="status" aria-live="polite"></p>
+      </section>
+
+      <section class="panel empty-state" aria-labelledby="profile-title">
+        <span class="empty-mark" aria-hidden="true">◎</span>
+        <h2 id="profile-title" data-i18n="Чтение профиля…">Reading profile…</h2>
+        <p class="muted" id="profile-description" role="status" aria-live="polite" data-i18n="Подмены не применяются.">Overrides are not applied.</p>
+        <dl id="profile-summary" class="profile-summary" hidden=""></dl>
+      </section>
+
+      <section class="panel" aria-labelledby="editor-title">
+        <h2 id="editor-title" data-i18n="Региональный профиль">Regional profile</h2>
+        <p class="help" data-i18n="Звёздочкой отмечены обязательные поля. Пустые дополнительные геопараметры означают «неизвестно»; ноль сохраняется как значение.">An asterisk marks required fields. Empty optional geolocation fields mean “unknown”; zero is saved as a value.</p>
+        <form id="profile-form" novalidate="">
+          <fieldset id="profile-fields" class="profile-fields" disabled="">
+            <legend class="visually-hidden" data-i18n="Параметры профиля">Profile parameters</legend>
+            <label class="full-width" for="profile-name"><span data-i18n="Название *">Name *</span><input id="profile-name" name="name" maxlength="80" required="" autocomplete="off" aria-describedby="profile-error-name"><span class="field-error" id="profile-error-name"></span></label>
+            <label for="profile-latitude"><span data-i18n="Широта *">Latitude *</span><input id="profile-latitude" name="latitude" inputmode="decimal" placeholder="52,52" required="" aria-describedby="profile-error-latitude"><span class="field-error" id="profile-error-latitude"></span></label>
+            <label for="profile-longitude"><span data-i18n="Долгота *">Longitude *</span><input id="profile-longitude" name="longitude" inputmode="decimal" placeholder="13,405" required="" aria-describedby="profile-error-longitude"><span class="field-error" id="profile-error-longitude"></span></label>
+            <label for="profile-accuracy"><span data-i18n="Точность, м *">Accuracy, m *</span><input id="profile-accuracy" name="accuracy" inputmode="decimal" required="" aria-describedby="profile-error-accuracy"><span class="field-error" id="profile-error-accuracy"></span></label>
+            <label for="profile-altitude"><span data-i18n="Высота, м">Altitude, m</span><input id="profile-altitude" name="altitude" inputmode="decimal" placeholder="Unknown" aria-describedby="profile-error-altitude" data-i18n-placeholder="Неизвестно"><span class="field-error" id="profile-error-altitude"></span></label>
+            <label for="profile-altitudeAccuracy"><span data-i18n="Точность высоты, м">Altitude accuracy, m</span><input id="profile-altitudeAccuracy" name="altitudeAccuracy" inputmode="decimal" placeholder="Unknown" aria-describedby="profile-error-altitudeAccuracy" data-i18n-placeholder="Неизвестно"><span class="field-error" id="profile-error-altitudeAccuracy"></span></label>
+            <label for="profile-speed"><span data-i18n="Скорость, м/с">Speed, m/s</span><input id="profile-speed" name="speed" inputmode="decimal" placeholder="Unknown" aria-describedby="profile-error-speed" data-i18n-placeholder="Неизвестно"><span class="field-error" id="profile-error-speed"></span></label>
+            <label for="profile-heading"><span data-i18n="Направление, 0–359,999°">Heading, 0–359.999°</span><input id="profile-heading" name="heading" inputmode="decimal" placeholder="Unknown" aria-describedby="profile-error-heading" data-i18n-placeholder="Неизвестно"><span class="field-error" id="profile-error-heading"></span></label>
+            <label for="profile-timeZone"><span data-i18n="Часовой пояс *">Time zone *</span><input id="profile-timeZone" name="timeZone" placeholder="Europe/Berlin" required="" spellcheck="false" aria-describedby="profile-error-timeZone"><span class="field-error" id="profile-error-timeZone"></span></label>
+            <label for="profile-locale"><span data-i18n="Локаль форматов *">Formatting locale *</span><input id="profile-locale" name="locale" placeholder="de-DE" required="" spellcheck="false" aria-describedby="profile-error-locale"><span class="field-error" id="profile-error-locale"></span></label>
+            <label class="full-width" for="profile-languages"><span data-i18n="Языки в порядке предпочтения *">Languages in order of preference *</span><input id="profile-languages" name="languages" placeholder="de-DE, de, en-US" required="" spellcheck="false" aria-describedby="languages-help profile-error-languages"><span class="field-error" id="profile-error-languages"></span></label>
+            <p id="languages-help" class="help full-width" data-i18n="От 1 до 10 тегов через запятую или пробел. Первый язык используется в navigator.language; порядок определяет Accept-Language.">Enter 1 to 10 tags separated by commas or spaces. The first language is used for navigator.language; the order determines Accept-Language.</p>
+            <label class="full-width" for="profile-keyboardLayout"><span data-i18n="Карта раскладки">Keyboard map</span><select id="profile-keyboardLayout" name="keyboardLayout" aria-describedby="keyboard-help profile-error-keyboardLayout"></select><span class="field-error" id="profile-error-keyboardLayout"></span></label>
+            <p id="keyboard-help" class="help full-width" data-i18n="Меняется только getLayoutMap при доступном Keyboard Map API. Набор текста, KeyboardEvent.key/code, сочетания клавиш и IME остаются системными. Изменение карты требует применения и перезагрузки страниц.">Only getLayoutMap changes, when the Keyboard Map API is available. Typing, KeyboardEvent.key/code, shortcuts and IME keep their system behavior. Apply the profile and reload pages to change the map.</p>
+            <div class="form-actions full-width"><button id="save-profile" class="save-button" type="submit" data-i18n="Сохранить профиль">Save profile</button><button id="profile-example" class="secondary-button" type="button" data-i18n="Подставить пример «Берлин»">Use Berlin example</button></div>
+          </fieldset>
+          <p id="profile-validation" class="field-error" role="status" aria-live="polite"></p>
+          <p id="profile-draft-state" class="help" role="status" aria-live="polite"></p>
+          <p id="profile-save-feedback" class="feedback" role="status" aria-live="polite"></p>
+          <button id="reload-profile" class="secondary-button" type="button" data-i18n="Загрузить сохранённые значения в форму">Load saved values into the form</button>
+        </form>
+      </section>
+
+      <section class="panel" aria-labelledby="sites-title">
+        <h2 id="sites-title" data-i18n="Область действия">Scope</h2>
+        <form id="site-mode-form" class="site-form">
+          <label for="site-selection-mode"><span data-i18n="Выбор сайтов">Site selection</span><select id="site-selection-mode" name="mode"><option value="selected_sites" data-i18n="Только выбранные сайты">Selected sites only</option><option value="all_granted_sites" data-i18n="Все сайты с уже выданным доступом">All sites with granted access</option></select></label>
+          <p class="help" data-i18n="Переключение сохраняет списки сайтов и исключений. Новые разрешения не запрашиваются. В режиме «Все сайты» будущий выданный доступ также включает адрес; исключения действуют всегда.">Switching keeps your site and exclusion lists. It does not request new permissions. In “All sites” mode, future access grants also select those addresses; exclusions always apply.</p>
+          <button id="save-site-mode" type="submit" disabled="" data-i18n="Сохранить режим">Save mode</button>
+        </form>
+        <p class="help" id="site-mode"></p>
+        <p class="help" data-i18n="Подмена API относится к документу, сетевой заголовок — к адресату запроса. Исключения важнее включений.">API overrides apply to the document; the network header applies to the request destination. Exclusions take priority over inclusions.</p>
+        <form id="site-form" class="site-form">
+          <label><span data-i18n="Хост">Host</span><input name="host" placeholder="example.com" required="" autocomplete="off"></label>
+          <label><span data-i18n="Действие">Action</span><select name="kind"><option value="include" data-i18n="Выбрать сайт">Select site</option><option value="exclude" data-i18n="Исключить сайт">Exclude site</option><option value="permission" data-i18n="Выдать только доступ">Grant access only</option></select></label>
+          <div class="site-checks"><label><input type="checkbox" name="https" checked=""> HTTPS</label><label><input type="checkbox" name="http"> HTTP</label><label><input type="checkbox" name="subdomains"><span data-i18n="Включая поддомены">Include subdomains</span></label></div>
+          <button type="submit" data-i18n="Добавить">Add</button>
+        </form>
+        <p id="site-feedback" class="feedback" role="status" aria-live="polite"></p>
+        <div id="site-list" data-i18n="Загрузка списка…">Loading list…</div>
+        <details class="granted-origins"><summary data-i18n="Выданные доступы">Granted access</summary><div id="granted-sites" data-i18n="Загрузка…">Loading…</div></details>
+      </section>
+      <section class="panel" aria-labelledby="capability-title">
+        <h2 id="capability-title" data-i18n="Проверка Chrome">Chrome compatibility</h2>
+        <p class="help" data-i18n="Перед первым применением загрузите полный отчёт проверки совместимости из Oboro Check. Он подтверждает работу расширения до запуска скриптов сайта в вашей версии Chrome. Ошибка или неполный отчёт оставляют подмены выключенными.">Before applying for the first time, import a full compatibility report from Oboro Check. It verifies that the extension runs before site scripts in your Chrome version. Overrides remain off if the report fails or is incomplete.</p>
+        <label class="report-file"><span data-i18n="Отчёт проверки (JSON)">Compatibility report (JSON)</span><input id="capability-report" type="file" accept="application/json,.json"></label>
+        <button id="inspect-capabilities" class="secondary-button" type="button" data-i18n="Проверить доступность механизмов">Check available mechanisms</button>
+        <h3 class="coverage-heading" data-i18n="Покрытие документов">Document coverage</h3>
+        <p class="help" data-i18n="Показаны только наблюдавшиеся документы. Диагностика не доказывает отсутствие всех утечек. Возврат из BFCache не применяет новую версию профиля.">Only observed documents are shown. Diagnostics do not prove the absence of all leaks. Returning from BFCache does not apply a new profile revision.</p>
+        <p class="coverage-gap"><strong data-i18n="Workers: без базовой подмены.">Workers: no baseline overrides.</strong><span data-i18n="Dedicated, Shared и Service Workers сайта не покрыты. Непрозрачные about:blank/srcdoc/blob-контексты пропускаются, если HTTP/HTTPS-область не подтверждена.">Site Dedicated, Shared and Service Workers are not covered. Opaque about:blank/srcdoc/blob contexts are skipped unless their HTTP/HTTPS scope is verified.</span></p>
+        <p class="help" data-i18n="Геонаблюдения останавливаются при уходе страницы. После возврата из кэша для их возобновления может понадобиться перезагрузка.">Geolocation watches stop when the page is left. A reload may be needed to resume them after returning from cache.</p>
+        <div id="document-coverage" class="document-coverage" aria-live="polite" data-i18n="Загрузка…">Loading…</div>
+        <details><summary data-i18n="Технический отчёт документов и версий">Technical document and revision report</summary><pre id="activation-diagnostics" class="diagnostic-output"></pre></details>
+      </section>
+      <footer class="footer"><span data-i18n="Настройки хранятся локально">Settings are stored locally</span><span>oboro · v<span id="version">0.3.1</span></span></footer>
+    </main>
+
+
+</body></html>

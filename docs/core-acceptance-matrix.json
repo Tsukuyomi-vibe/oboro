@@ -1,0 +1,262 @@
+{
+  "schemaVersion": 1,
+  "packageVersion": "0.3.1",
+  "date": "2026-11-23",
+  "status": "BLOCKED_NATIVE_BROWSER_ACCEPTANCE",
+  "requiredCases": [
+    {
+      "id": "m0",
+      "title": "Первый script/request и полный M0 для точного build",
+      "procedure": "baseline без расширения; probe baseline/armed/off; исходные JSON; реальный userScripts toggle",
+      "required": true
+    },
+    {
+      "id": "scope",
+      "title": "Выбранные/исключённые/контрольные сайты и iframe",
+      "procedure": "Проверить профиль API по документу, Accept-Language по адресату, grants инициатора и исключения",
+      "required": true
+    },
+    {
+      "id": "modes",
+      "title": "Режимы сайтов и разрешения",
+      "procedure": "Пустой selected_sites; all_granted_sites; отказ; сохранность исключений; нет молчаливых новых grants",
+      "required": true
+    },
+    {
+      "id": "geolocation",
+      "title": "get/watch/clear и разрешения",
+      "procedure": "Все поля профиля, async, secure/policy/denied/prompt, отсутствие передачи реальных координат и очистка watch",
+      "required": true
+    },
+    {
+      "id": "locale_time",
+      "title": "Локали и время",
+      "procedure": "Date/Intl: зима/лето/DST, конструктор/ISO/локальные setters, явные зоны, timestamp/ISO/JSON/clone",
+      "required": true
+    },
+    {
+      "id": "temporal",
+      "title": "Доступный Temporal.Now либо подтверждённое отсутствие",
+      "procedure": "Пояс профиля по умолчанию, native instant/ns, явные зоны; отсутствие API не заменять polyfill",
+      "required": true
+    },
+    {
+      "id": "keyboard",
+      "title": "Карта раскладки и системный ввод",
+      "procedure": "get/has/size/итерация/errors/layoutchange; реальные key/code, сочетания и IME остаются системными",
+      "required": true
+    },
+    {
+      "id": "apply_off",
+      "title": "Apply/OFF/reload",
+      "procedure": "Нет дубликатов, реальные документы/версии, снятие rules/scripts; прежние живые/кэшированные контексты требуют reload",
+      "required": true
+    },
+    {
+      "id": "recovery",
+      "title": "Worker restart/update и изменения окружения",
+      "procedure": "Actual registrations/DNR, pending/committed, потеря permissions/userScripts, отсутствие ложного READY",
+      "required": true
+    },
+    {
+      "id": "bfcache_spa",
+      "title": "BFCache и SPA",
+      "procedure": "Реальный pageshow.persisted=true; старый профиль не становится новым; history/fragment сохраняют documentId",
+      "required": true
+    },
+    {
+      "id": "new_windows",
+      "title": "Новые окна/вкладки",
+      "procedure": "Первый script/request выбранного нового документа, native completion и независимые revision",
+      "required": true
+    },
+    {
+      "id": "opaque",
+      "title": "Ранние и непрозрачные контексты",
+      "procedure": "about:blank/srcdoc/blob/sandbox: отсутствие базовой подмены и явный неподтверждённый/unsupported статус",
+      "required": true
+    },
+    {
+      "id": "workers",
+      "title": "Dedicated/Shared/Service Workers: отрицательное покрытие",
+      "procedure": "Сравнить с исходным запуском, baseRuntimeInjected=false, native APIs; очистить только тестовую регистрацию",
+      "required": true
+    },
+    {
+      "id": "package_install",
+      "title": "Установка пакетов и диагностика",
+      "procedure": "Загрузить dist/dist-probe по очереди; UI/версия/разрешения/ограничения; не считать synthetic тесты native доказательством",
+      "required": true
+    }
+  ],
+  "channels": [
+    {
+      "channel": "stable",
+      "exactBuild": null,
+      "evidenceSource": null,
+      "execution": "NOT_RUN",
+      "checks": [
+        {
+          "id": "m0",
+          "status": "NOT_RUN",
+          "evidence": []
+        },
+        {
+          "id": "scope",
+          "status": "NOT_RUN",
+          "evidence": []
+        },
+        {
+          "id": "modes",
+          "status": "NOT_RUN",
+          "evidence": []
+        },
+        {
+          "id": "geolocation",
+          "status": "NOT_RUN",
+          "evidence": []
+        },
+        {
+          "id": "locale_time",
+          "status": "NOT_RUN",
+          "evidence": []
+        },
+        {
+          "id": "temporal",
+          "status": "NOT_RUN",
+          "evidence": []
+        },
+        {
+          "id": "keyboard",
+          "status": "NOT_RUN",
+          "evidence": []
+        },
+        {
+          "id": "apply_off",
+          "status": "NOT_RUN",
+          "evidence": []
+        },
+        {
+          "id": "recovery",
+          "status": "NOT_RUN",
+          "evidence": []
+        },
+        {
+          "id": "bfcache_spa",
+          "status": "NOT_RUN",
+          "evidence": []
+        },
+        {
+          "id": "new_windows",
+          "status": "NOT_RUN",
+          "evidence": []
+        },
+        {
+          "id": "opaque",
+          "status": "NOT_RUN",
+          "evidence": []
+        },
+        {
+          "id": "workers",
+          "status": "NOT_RUN",
+          "evidence": []
+        },
+        {
+          "id": "package_install",
+          "status": "NOT_RUN",
+          "evidence": []
+        }
+      ]
+    },
+    {
+      "channel": "beta",
+      "exactBuild": null,
+      "evidenceSource": null,
+      "execution": "NOT_RUN",
+      "checks": [
+        {
+          "id": "m0",
+          "status": "NOT_RUN",
+          "evidence": []
+        },
+        {
+          "id": "scope",
+          "status": "NOT_RUN",
+          "evidence": []
+        },
+        {
+          "id": "modes",
+          "status": "NOT_RUN",
+          "evidence": []
+        },
+        {
+          "id": "geolocation",
+          "status": "NOT_RUN",
+          "evidence": []
+        },
+        {
+          "id": "locale_time",
+          "status": "NOT_RUN",
+          "evidence": []
+        },
+        {
+          "id": "temporal",
+          "status": "NOT_RUN",
+          "evidence": []
+        },
+        {
+          "id": "keyboard",
+          "status": "NOT_RUN",
+          "evidence": []
+        },
+        {
+          "id": "apply_off",
+          "status": "NOT_RUN",
+          "evidence": []
+        },
+        {
+          "id": "recovery",
+          "status": "NOT_RUN",
+          "evidence": []
+        },
+        {
+          "id": "bfcache_spa",
+          "status": "NOT_RUN",
+          "evidence": []
+        },
+        {
+          "id": "new_windows",
+          "status": "NOT_RUN",
+          "evidence": []
+        },
+        {
+          "id": "opaque",
+          "status": "NOT_RUN",
+          "evidence": []
+        },
+        {
+          "id": "workers",
+          "status": "NOT_RUN",
+          "evidence": []
+        },
+        {
+          "id": "package_install",
+          "status": "NOT_RUN",
+          "evidence": []
+        }
+      ]
+    }
+  ],
+  "automatedChecks": {
+    "command": "npm run check",
+    "method": "NODE_VM_DOM_AND_TEST_CHROME_BACKEND",
+    "isNativeChromeAcceptance": false,
+    "summary": "artifacts/verification-summary.json"
+  },
+  "rules": [
+    "PASS требует фактического запуска в указанном установленном Chrome и ссылок на исходные доказательства.",
+    "NOT_RUN/BLOCKED не заменяются результатами Node/VM/DOM или совпадением значений с профилем.",
+    "Подтверждённое отсутствие optional API и намеренно нативные workers/opaque фиксируются отдельно с объяснением; это не полное покрытие окружения.",
+    "Точная версия фиксируется заново для Stable и Beta; M0 и M3 не закрыты."
+  ]
+}

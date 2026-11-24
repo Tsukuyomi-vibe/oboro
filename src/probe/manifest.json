@@ -1,0 +1,18 @@
+{
+  "manifest_version": 3,
+  "name": "oboro — diagnostics",
+  "version": "0.3.1",
+  "description": "Separate diagnostic build: checks early injection and network rules on a local fixture only.",
+  "minimum_chrome_version": "120",
+  "permissions": ["storage", "userScripts", "declarativeNetRequestWithHostAccess"],
+  "host_permissions": [
+    "http://selected.localhost/*", "https://selected.localhost/*",
+    "http://app.selected.localhost/*", "https://app.selected.localhost/*",
+    "http://excluded.selected.localhost/*", "https://excluded.selected.localhost/*",
+    "http://control.localhost/*", "https://control.localhost/*"
+  ],
+  "background": { "service_worker": "background/service-worker.js", "type": "module" },
+  "action": { "default_title": "Open oboro diagnostics" },
+  "options_ui": { "page": "probe/probe.html", "open_in_tab": true },
+  "content_security_policy": { "extension_pages": "script-src 'self'; object-src 'self'" }
+}
