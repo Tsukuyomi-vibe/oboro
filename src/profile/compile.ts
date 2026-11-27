@@ -9,5 +9,5 @@ export function compileAcceptLanguage(value: unknown): string {
 
 export function compileRegionalProfile(value: RegionalProfile): CompiledRegionalProfile {
   const profile = parseRegionalProfile(value);
-  return Object.freeze({ profile, acceptLanguage: compileAcceptLanguage(profile.languages) });
+  return Object.freeze({ profile, acceptLanguage: profile.languages ? compileAcceptLanguage(profile.languages) : null });
 }

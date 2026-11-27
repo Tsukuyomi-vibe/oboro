@@ -16,6 +16,7 @@ export function scopeRegex(scope: HostScope): string {
   return `^${scope.scheme}://(?:[^/@]+@)?${host}(?::[0-9]+)?/`;
 }
 export function compileNetworkRules(snapshot: RuntimeSnapshot): chrome.declarativeNetRequest.Rule[] {
+  if (!snapshot.profile.languages) return [];
   const included = selectedScopes(snapshot.policy, snapshot.grantedOrigins);
   if (!included.length) return [];
   const exclusions = snapshot.policy.exclude.flatMap((rule) => rule.schemes.map((scheme) => ({ scheme, host: rule.host, includeSubdomains: rule.includeSubdomains })));

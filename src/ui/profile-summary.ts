@@ -25,16 +25,20 @@ export function mountProfileSummary(): void {
       }
       setPlainText(title, profile.name);
       setText(description, "Сохранённая версия: {0}. Изменения вступают в силу после применения и перезагрузки выбранных страниц.", profile.revision);
+      const native = "Значение браузера";
       const rows = [
-        ["Языки", profile.languages.join(", ")], ["Форматы", profile.locale],
-        ["Часовой пояс", profile.timeZone], ["Координаты", `${profile.geolocation.latitude}, ${profile.geolocation.longitude}`],
-        ["Точность", `${profile.geolocation.accuracy} м`], ["Карта раскладки", keyboardLayout(profile.keyboardLayout).label]
+        ["Языки", profile.languages?.join(", ") ?? native], ["Форматы", profile.locale ?? native], ["Часовой пояс", profile.timeZone ?? native],
+        ...(["latitude", "longitude", "accuracy", "altitude", "altitudeAccuracy", "speed", "heading"] as const).map((key, index) => {
+          const value = profile.geolocation[key];
+          return [["Широта", "Долгота", "Точность", "Высота", "Точность высоты", "Скорость", "Направление"][index]!, value === undefined ? native : value === null ? "Неизвестно" : String(value)];
+        }),
+        ["Карта раскладки", keyboardLayout(profile.keyboardLayout).label]
       ];
       for (const [label, value] of rows) {
         const term = document.createElement("dt");
         const detail = document.createElement("dd");
         setText(term, label!);
-        if (label === "Точность" || label === "Карта раскладки") setText(detail, value!);
+        if (value === native || value === "Неизвестно" || label === "Карта раскладки") setText(detail, value!);
         else setPlainText(detail, value!);
         summary.append(term, detail);
       }

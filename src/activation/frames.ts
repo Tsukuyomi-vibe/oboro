@@ -208,15 +208,15 @@ export class FrameRegistry {
     if (decision.selection !== "selected" || !decision.granted || typeof value !== "object" || value === null) return false;
     const report = authenticatePageRuntimeReport(value, snapshot, sender.origin!);
     if (!report) return false;
-    if (!["installed", "error"].includes(report.locale ?? "")) return false;
-    if (!["installed", "partial", "error"].includes(report.time ?? "") || !report.timeCoverage || typeof report.timeCoverage !== "object" || !["formatting", "localRead", "construction", "parse", "localSetters", "temporal", "complete"].every((key) => typeof (report.timeCoverage as unknown as Record<string, unknown>)[key] === "boolean")) return false;
-    if (!["installed", "absent", "unsupported", "error", "not_checked"].includes(report.temporal ?? "")) return false;
+    if (!["native", "installed", "error"].includes(report.locale ?? "")) return false;
+    if (!["native", "installed", "partial", "error"].includes(report.time ?? "") || !report.timeCoverage || typeof report.timeCoverage !== "object" || !["formatting", "localRead", "construction", "parse", "localSetters", "temporal", "complete"].every((key) => typeof (report.timeCoverage as unknown as Record<string, unknown>)[key] === "boolean")) return false;
+    if (!["native", "installed", "absent", "unsupported", "error", "not_checked"].includes(report.temporal ?? "")) return false;
     if (!["native", "installed", "unsupported", "error", "not_checked"].includes(report.keyboard ?? "") || !isKeyboardLayoutId(report.keyboardLayout) || !(report.keyboardReason === null || typeof report.keyboardReason === "string" && report.keyboardReason.length <= 1000)) return false;
     const compatibility = report.timeCompatibility;
     if (!compatibility || !["passed", "failed", "not_run"].includes(compatibility.status) || !["passed", "absent", "failed", "not_run"].includes(compatibility.structuredClone)
       || !Array.isArray(compatibility.checks) || compatibility.checks.length > 32 || !compatibility.checks.every((entry) => typeof entry === "string" && entry.length <= 128)
       || !Array.isArray(compatibility.failures) || compatibility.failures.length > 16 || !compatibility.failures.every((entry) => typeof entry === "string" && entry.length <= 1000)) return false;
-    if (typeof report.activationId !== "string" || !Number.isSafeInteger(report.profileRevision) || !Number.isSafeInteger(report.policyRevision) || !["loading", "interactive", "complete"].includes(report.readyState ?? "") || !["installed", "error"].includes(report.languages ?? "") || !["installed", "unsupported", "error", "not_implemented"].includes(report.geolocation ?? "") || typeof report.needsReload !== "boolean") return false;
+    if (typeof report.activationId !== "string" || !Number.isSafeInteger(report.profileRevision) || !Number.isSafeInteger(report.policyRevision) || !["loading", "interactive", "complete"].includes(report.readyState ?? "") || !["native", "installed", "error"].includes(report.languages ?? "") || !["native", "installed", "unsupported", "error", "not_implemented"].includes(report.geolocation ?? "") || typeof report.needsReload !== "boolean") return false;
     if (report.implementation !== RUNTIME_IMPLEMENTATION) return false;
     const key = sender.tab!.id + ":" + sender.frameId;
     let frame = this.frames.get(key);
@@ -234,10 +234,15 @@ export class FrameRegistry {
       timeCompatibility: { status: compatibility.status, structuredClone: compatibility.structuredClone, checks: [...compatibility.checks], failures: [...compatibility.failures] } });
     const dateCovered = (["formatting", "localRead", "construction", "parse", "localSetters"] as const).every((name) => report.timeCoverage?.[name] === true);
     const temporalCovered = report.temporal === "installed" && report.timeCoverage.temporal || report.temporal === "absent" && !report.timeCoverage.temporal;
-    const timeCovered = report.time === "installed" && report.timeCoverage.complete && dateCovered && temporalCovered && compatibility.status === "passed" && !compatibility.failures.length && ["passed", "absent"].includes(compatibility.structuredClone);
+    const timeCovered = snapshot.profile.timeZone
+      ? report.time === "installed" && report.timeCoverage.complete && dateCovered && temporalCovered && compatibility.status === "passed" && !compatibility.failures.length && ["passed", "absent"].includes(compatibility.structuredClone)
+      : report.time === "native" && report.temporal === "native";
     const requestedKeyboard = snapshot.profile.keyboardLayout ?? "native";
     const keyboardCovered = report.keyboardLayout === requestedKeyboard && report.keyboard === (requestedKeyboard === "native" ? "native" : "installed");
-    frame.status = !current || report.needsReload || report.readyState !== "loading" ? "NEEDS_RELOAD" : report.languages === "installed" && report.locale === "installed" && timeCovered && keyboardCovered && (!snapshot.geolocationOneShot || report.geolocation === "installed") ? "INSTALLED" : "LIMITED";
+    const languagesCovered = report.languages === (snapshot.profile.languages ? "installed" : "native");
+    const localeCovered = report.locale === (snapshot.profile.locale ? "installed" : "native");
+    const geoCovered = Object.keys(snapshot.profile.geolocation ?? {}).length ? !snapshot.geolocationOneShot || report.geolocation === "installed" : report.geolocation === "native";
+    frame.status = !current || report.needsReload || report.readyState !== "loading" ? "NEEDS_RELOAD" : languagesCovered && localeCovered && timeCovered && keyboardCovered && geoCovered ? "INSTALLED" : "LIMITED";
     frame.reasons = Array.isArray(report.reasons) ? report.reasons.filter((entry): entry is string => typeof entry === "string" && entry.length <= 1000).slice(0, 16) : [];
     if (frame.status === "NEEDS_RELOAD") frame.reasons.push("Версия или ранняя установка не совпадает; перезагрузите документ.");
     else if (frame.status === "LIMITED" && !frame.reasons.length) frame.reasons.push("Часть запрошенных модулей не установлена.");

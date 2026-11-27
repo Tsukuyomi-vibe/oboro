@@ -13,9 +13,18 @@ export function emptyTimeCompatibility(failures: readonly string[] = []): Readon
 type TimeInstallation = Pick<RuntimeReport, "locale" | "time" | "temporal" | "timeCoverage" | "timeCompatibility" | "reasons">;
 export function installTimeRuntime(profile: RegionalProfile): TimeInstallation {
   const result: TimeInstallation = {
-    locale: "error", time: "error", temporal: "not_checked", timeCoverage: emptyCoverage(),
+    locale: profile.locale ? "error" : "native", time: profile.timeZone ? "error" : "native", temporal: profile.timeZone ? "not_checked" : "native", timeCoverage: emptyCoverage(),
     timeCompatibility: emptyTimeCompatibility(), reasons: []
   };
+  if (!profile.timeZone) {
+    if (profile.locale) {
+      try {
+        installLocaleRuntime(profile.locale); result.locale = "installed";
+        result.timeCoverage = Object.freeze({ ...emptyCoverage(), formatting: true });
+      } catch (error) { result.reasons.push(error instanceof Error ? error.message : "Ошибка locale."); }
+    }
+    return result;
+  }
   const rollback: (() => void)[] = [];
   let restoreFailed = false;
   try {
@@ -35,7 +44,7 @@ export function installTimeRuntime(profile: RegionalProfile): TimeInstallation {
     const compatibility = verify(temporal.status);
     result.timeCompatibility = compatibility;
     if (compatibility.status !== "passed") throw new Error(compatibility.failures.join(" "));
-    result.locale = "installed"; result.time = "installed";
+    result.locale = profile.locale ? "installed" : "native"; result.time = "installed";
     result.timeCoverage = Object.freeze({ formatting: true, localRead: true, construction: true, parse: true, localSetters: true, temporal: temporal.status === "installed", complete: true });
     return result;
   } catch (error) {
@@ -51,8 +60,10 @@ export function installTimeRuntime(profile: RegionalProfile): TimeInstallation {
     }
     // Locale-only formatting remains useful when timezone installation fails;
     // it does not introduce a mixed Date/Intl/Temporal timezone configuration.
-    try { installLocaleRuntime(profile.locale); result.locale = "installed"; }
-    catch (localeError) { result.reasons.push(localeError instanceof Error ? localeError.message : "Ошибка locale."); }
+    if (profile.locale) {
+      try { installLocaleRuntime(profile.locale); result.locale = "installed"; }
+      catch (localeError) { result.reasons.push(localeError instanceof Error ? localeError.message : "Ошибка locale."); }
+    }
     return result;
   }
 }

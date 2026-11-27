@@ -4,6 +4,11 @@
 (() => {
   /** @type {Readonly<Record<string, string>>} */
   const messages = Object.freeze({
+    "Точность, м": "Accuracy, m",
+    "Языки в порядке предпочтения": "Languages in order of preference",
+    "Значение браузера": "Browser value",
+    "Обязательно только название. Пустые поля не подменяются и используют значения текущего браузера на каждом ПК. Для явного неизвестного значения высоты, точности высоты, скорости или направления введите unknown; ноль сохраняется как значение.": "Only the name is required. Empty fields are not overridden and use the current browser's values on each PC. Enter unknown for an explicitly unknown altitude, altitude accuracy, speed or heading; zero is preserved.",
+    "Пустое поле сохраняет языки браузера и Accept-Language. Для подмены укажите от 1 до 10 тегов через запятую или пробел; первый используется в navigator.language.": "Leave empty to keep browser languages and Accept-Language. To override, enter 1 to 10 tags separated by commas or spaces; the first is used for navigator.language.",
     "Режим всех доступных сайтов использует текущие разрешения этого Chrome, включая адреса вне файла. Импорт не отзывает существующие доступы.": "All-sites mode uses this Chrome's current permissions, including addresses outside the file. Import does not revoke existing access.",
     "Не удалось проверить доступы. Откройте настройки заново и проверьте разрешения Chrome.": "Could not check site access. Reopen settings and check Chrome permissions.",
     "Конфигурация восстановлена, подмены выключены. Не удалось восстановить интерфейс в этом окне; откройте настройки заново.": "Configuration restored and overrides are off. Could not restore the interface in this window; reopen settings.",

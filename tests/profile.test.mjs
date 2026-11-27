@@ -69,7 +69,7 @@ function connectClient(repository, sender = trustedUi) {
 
 test("I03: пример профиля и согласованный неизменяемый снимок", () => {
   const profile = getExampleProfile();
-  assert.equal(profile.schemaVersion, 1);
+  assert.equal(profile.schemaVersion, 2);
   assert.equal(profile.revision, 1);
   assert.equal(profile.language, profile.languages[0]);
   assert.deepEqual(profile.geolocation, { latitude: 52.52, longitude: 13.405, accuracy: 1000, altitude: null, altitudeAccuracy: null, speed: null, heading: null });
@@ -88,11 +88,11 @@ test("I03: пример профиля и согласованный неизм�
   assert.equal("language" in profileToDraft(profile), false);
 });
 
-test("I03: границы координат и нормализация неизвестных геополей в null", () => {
+test("I03: границы координат и сохранение отсутствующих геополей без подмены", () => {
   const draft = freshDraft();
   draft.geolocation = { latitude: -90, longitude: 180, accuracy: 0 };
   const normalized = parseProfileDraft(draft);
-  assert.deepEqual(normalized.geolocation, { latitude: -90, longitude: 180, accuracy: 0, altitude: null, altitudeAccuracy: null, speed: null, heading: null });
+  assert.deepEqual(normalized.geolocation, { latitude: -90, longitude: 180, accuracy: 0 });
   const opposite = freshDraft();
   opposite.geolocation = { latitude: 90, longitude: -180, accuracy: 0.5, altitude: -430.25, altitudeAccuracy: 0, speed: 0, heading: 359.999 };
   assert.deepEqual(parseProfileDraft(opposite).geolocation, opposite.geolocation);
@@ -116,7 +116,7 @@ test("I03: нечисловые, бесконечные и выходящие з
     const draft = freshDraft(); draft.geolocation[field] = null;
     assert.throws(() => parseProfileDraft(draft), ProfileValidationError);
     delete draft.geolocation[field];
-    assert.throws(() => parseProfileDraft(draft), ProfileValidationError);
+    assert.equal(Object.hasOwn(parseProfileDraft(draft).geolocation, field), false);
   }
 });
 
@@ -168,7 +168,7 @@ test("I03: схема, revision и derived language проверяются пр�
   for (const revision of [0, -1, 1.5, NaN, Infinity, Number.MAX_SAFE_INTEGER + 1, "1", null]) {
     assert.throws(() => parseRegionalProfile({ ...clone(getExampleProfile()), revision }), ProfileValidationError);
   }
-  for (const schemaVersion of [0, 2, "1", null]) {
+  for (const schemaVersion of [0, 3, "1", null]) {
     assert.throws(() => parseRegionalProfile({ ...clone(getExampleProfile()), schemaVersion }), (error) => error.issues[0].code === "unsupported_schema");
   }
   assert.throws(() => parseRegionalProfile({ ...clone(getExampleProfile()), language: "en-US" }), (error) => error.issues[0].code === "inconsistent_language");

@@ -4,7 +4,7 @@
 
 A Chrome Manifest V3 extension that applies a regional profile to sites you select. Configure browser languages, geolocation, formatting locale, time zone and keyboard layout map in one place.
 
-Version: **0.3.1**. The interface defaults to English; Russian remains available. Both language and theme choices are saved locally.
+Version: **0.3.2**. The interface defaults to English; Russian remains available. Both language and theme choices are saved locally.
 
 **Native Chrome Stable/Beta acceptance is still incomplete.** Activation requires a complete, successful Oboro Check report for your exact Chrome version. Building the extension or passing automated tests does not satisfy this requirement.
 
@@ -13,7 +13,7 @@ Version: **0.3.1**. The interface defaults to English; Russian remains available
 | Setting | Effect |
 | --- | --- |
 | Preferred languages | `navigator.language`, `navigator.languages` and the `Accept-Language` request header |
-| Geolocation | Fixed latitude, longitude, accuracy, altitude, altitude accuracy, speed and heading |
+| Geolocation | Independently override latitude, longitude, accuracy, altitude, altitude accuracy, speed and heading |
 | Formatting locale | Default locale for supported `Intl` constructors and locale-sensitive number, date and string methods |
 | Time zone | Default zone for Date/Intl and supported existing Temporal.Now methods; local date construction, parsing, getters and setters |
 | Keyboard map | Native map, US QWERTY, DE QWERTZ or RU JCUKEN through the available `Keyboard.getLayoutMap()` API |
@@ -48,7 +48,7 @@ For later updates, rebuild the project, click the reload button on the existing 
 
 ## Use a profile
 
-1. Fill in the regional profile or click **Use Berlin example**, then **Save profile**. The example only fills the form. Empty optional geolocation fields mean unknown; zero remains a value.
+1. Enter a profile name, choose the fields to override, then **Save profile**. **Only the name is required.** Empty fields use the current browser's values on each PC. Zero remains an explicit value; enter `unknown` for an explicitly unknown altitude, altitude accuracy, speed or heading. **Use Berlin example** fills a complete example without saving it.
 2. Choose **Selected sites only** or **All sites with granted access**, then save the mode. Add hosts, schemes, subdomain rules and exclusions. An empty selection enables no sites; exclusions take priority.
 3. Complete [Oboro Check](docs/probe-package-readme.en.md). Import the full JSON report into the main extension after removing the diagnostic probe and disabling the diagnostic extension.
 4. Click **Apply and reload selected pages**. Selected top-level pages reload; an existing cross-site iframe may require reloading its parent page manually.
@@ -57,6 +57,8 @@ For later updates, rebuild the project, click the reload button on the existing 
 Selecting a site and granting Chrome access are separate actions. In the default selected-sites mode, granting access alone does not select a site. All-sites mode also selects future access grants, except exclusions.
 
 Unsaved edits block applying from that settings page. Saving a changed profile requires applying it again. Conflicts or unconfirmed writes keep your draft and require loading the saved state again.
+
+For example, a profile named `123` with only latitude set changes only latitude. Longitude and other geolocation values come from the browser's native position, so partial geolocation still needs native permission and a successful position result. Leaving languages empty preserves both navigator languages and Accept-Language; locale, time zone and keyboard map are independent.
 
 To restore native APIs, turn off the master switch and reload previously processed pages. The switch removes future registrations and network rules; existing documents keep their wrappers until reload.
 
@@ -73,14 +75,14 @@ To restore settings:
 
 | File | What is restored |
 | --- | --- |
-| Full `oboro-config` configuration, schema v1 | Saved profile, site selection mode and rules, interface language/theme, and permission hints |
-| Legacy regional-profile v1 | Profile only; sites, language/theme and permission hints are preserved. The source app version is shown as unknown. |
+| Full `oboro-config` configuration, schema v1 or v2 | Saved profile, site selection mode and rules, interface language/theme, and permission hints |
+| Standalone regional-profile v1 or v2 | Profile only; sites, language/theme and permission hints are preserved. The source app version is shown as unknown. |
 
 Importing retains existing Chrome permissions and does not grant access automatically. **All sites with granted access** uses the receiving browser's current grants, which can include sites outside the file. Compatibility reports are not transferred; the existing check for your exact Chrome version still applies.
 
-The current format is `schemaVersion: 1`; each new export also records `oboroVersion` from the extension manifest. A newer exporter using a supported schema is accepted. A future schema or invalid fields are rejected before settings are changed. Conflicting edits require a fresh preview; failed or interrupted writes use saved rollback data, and unresolved recovery blocks further changes. Files must be UTF-8 JSON, at most **1 MiB**.
+The current format is `schemaVersion: 2`; each new export also records `oboroVersion` from the extension manifest. Only explicitly chosen overrides are exported. Importing a latitude-only profile on another PC keeps that PC's native longitude, languages, formatting locale, time zone and keyboard map. V1 files remain supported with their original full-profile defaults, including explicit unknown geolocation values. A newer exporter using a supported schema is accepted; future schemas or invalid fields are rejected before changes. Conflicting edits require a fresh preview; failed or interrupted writes use rollback data, and unresolved recovery blocks further changes. Files must be UTF-8 JSON, at most **1 MiB**.
 
-**Keep configuration files private:** they contain your profile name, coordinates and site lists. Downloads matching `oboro-config-*.json` are excluded by [.gitignore](.gitignore). Runtime activation state, local revision counters, compatibility reports, document IDs and machine/account metadata are omitted. See the [format contract](docs/configuration-format.md) and [v1 JSON Schema](schemas/oboro-config.v1.schema.json) for details.
+**Keep configuration files private:** they contain your profile name, chosen coordinates and site lists. Downloads matching `oboro-config-*.json` are excluded by [.gitignore](.gitignore). Runtime activation state, local revision counters, compatibility reports, document IDs and machine/account metadata are omitted. See the [format contract](docs/configuration-format.md) and [v2 JSON Schema](schemas/oboro-config.v2.schema.json) for details.
 
 ## Interface language and theme
 
@@ -138,6 +140,6 @@ The [.gitignore](.gitignore) excludes dependencies, builds, archives, logs, brow
 - [Russian README](README.ru.md)
 - [Main package installation guide](docs/core-package-readme.en.md)
 - [Diagnostic package guide](docs/probe-package-readme.en.md)
-- [Configuration format and compatibility](docs/configuration-format.md), [JSON Schema v1](schemas/oboro-config.v1.schema.json)
-- [Full data reference](info.md), [privacy](docs/privacy.md), [release notes](docs/releases/0.3.1.md) — Russian
+- [Configuration format and compatibility](docs/configuration-format.md), [JSON Schema v2](schemas/oboro-config.v2.schema.json), [retained v1 schema](schemas/oboro-config.v1.schema.json)
+- [Full data reference](info.md), [privacy](docs/privacy.md), [release notes](docs/releases/0.3.2.md) — Russian
 - [Native acceptance matrix](docs/core-acceptance-matrix.json) and [implementation status](docs/i21-i23-validation-status.json)

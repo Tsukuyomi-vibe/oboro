@@ -1,0 +1,19 @@
+{
+  "format": "oboro-config",
+  "schemaVersion": 2,
+  "oboroVersion": "0.3.2",
+  "config": {
+    "profile": {
+      "name": "123",
+      "geolocation": { "latitude": 52.52 },
+      "keyboardLayout": "native"
+    },
+    "sitePolicy": {
+      "mode": "selected_sites",
+      "include": [{ "host": "example.com", "schemes": ["https"], "includeSubdomains": false }],
+      "exclude": []
+    },
+    "ui": { "language": "en", "theme": "system" }
+  },
+  "permissionHints": { "origins": [] }
+}

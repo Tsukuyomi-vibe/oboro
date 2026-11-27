@@ -12,9 +12,10 @@ export function profileFieldForPath(path: string): ProfileField | undefined {
   const field = path.replace(/^geolocation\./, "").replace(/\[\d+\]$/, "");
   return (PROFILE_FIELDS as readonly string[]).includes(field) ? field as ProfileField : undefined;
 }
-function number(value: string, optional = false): number | null {
+function number(value: string, nullable = false): number | null | undefined {
   const text = value.trim();
-  if (!text && optional) return null;
+  if (!text) return undefined;
+  if (nullable && /^(unknown|неизвестно)$/i.test(text)) return null;
   if (!/^[+-]?(?:\d+(?:[.,]\d*)?|[.,]\d+)(?:[eE][+-]?\d+)?$/.test(text)) return NaN;
   return Number(text.replace(",", "."));
 }
@@ -24,15 +25,18 @@ export function profileDraftFromFields(fields: ProfileFields): ProfileDraft {
       latitude: number(fields.latitude), longitude: number(fields.longitude), accuracy: number(fields.accuracy),
       altitude: number(fields.altitude, true), altitudeAccuracy: number(fields.altitudeAccuracy, true), speed: number(fields.speed, true), heading: number(fields.heading, true)
     },
-    languages: fields.languages.trim() ? fields.languages.trim().split(/[\s,]+/).filter(Boolean) : [],
-    locale: fields.locale, timeZone: fields.timeZone, keyboardLayout: fields.keyboardLayout
+    ...(fields.languages.trim() ? { languages: fields.languages.trim().split(/[\s,]+/).filter(Boolean) } : {}),
+    ...(fields.locale.trim() ? { locale: fields.locale } : {}), ...(fields.timeZone.trim() ? { timeZone: fields.timeZone } : {}), keyboardLayout: fields.keyboardLayout
   });
 }
 export function profileToFields(profile: ProfileDraft | null): ProfileFields {
+  const geo = (name: keyof ProfileDraft["geolocation"]): string => {
+    const value = profile?.geolocation[name];
+    return value === null ? "unknown" : value === undefined ? "" : String(value);
+  };
   return {
-    name: profile?.name ?? "", latitude: profile ? String(profile.geolocation.latitude) : "", longitude: profile ? String(profile.geolocation.longitude) : "",
-    accuracy: profile ? String(profile.geolocation.accuracy) : "1000", altitude: String(profile?.geolocation.altitude ?? ""), altitudeAccuracy: String(profile?.geolocation.altitudeAccuracy ?? ""),
-    speed: String(profile?.geolocation.speed ?? ""), heading: String(profile?.geolocation.heading ?? ""), languages: profile?.languages.join(", ") ?? "",
+    name: profile?.name ?? "", latitude: geo("latitude"), longitude: geo("longitude"), accuracy: geo("accuracy"), altitude: geo("altitude"), altitudeAccuracy: geo("altitudeAccuracy"),
+    speed: geo("speed"), heading: geo("heading"), languages: profile?.languages?.join(", ") ?? "",
     locale: profile?.locale ?? "", timeZone: profile?.timeZone ?? "", keyboardLayout: profile?.keyboardLayout ?? "native"
   };
 }

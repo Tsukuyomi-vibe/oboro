@@ -19,7 +19,7 @@ export function installMainRuntime(snapshot: RuntimeSnapshot): PageRuntimeReport
   if (typeof existing === "function") {
     let page: PageRuntimeReport | null = null;
     try { page = readPageRuntimeReport(existing()); } catch { /* An unrelated page marker is not trusted. */ }
-    if (page && authenticatePageRuntimeReport(page, snapshot, globalThis.origin)) {
+    if (page?.implementation === RUNTIME_IMPLEMENTATION && authenticatePageRuntimeReport(page, snapshot, globalThis.origin)) {
       post({ type: PAGE_REPORT, report: page }, "*"); return page;
     }
   }
@@ -28,11 +28,11 @@ export function installMainRuntime(snapshot: RuntimeSnapshot): PageRuntimeReport
     implementation: RUNTIME_IMPLEMENTATION,
     activationId: snapshot.activationId, profileRevision: snapshot.profile.revision,
     policyRevision: snapshot.policy.policyRevision, readyState: document.readyState,
-    languages: "error", locale: "error", time: "error",
-    temporal: "not_checked", timeCompatibility: emptyTimeCompatibility(),
+    languages: snapshot.profile.languages ? "error" : "native", locale: snapshot.profile.locale ? "error" : "native", time: snapshot.profile.timeZone ? "error" : "native",
+    temporal: snapshot.profile.timeZone ? "not_checked" : "native", timeCompatibility: emptyTimeCompatibility(),
     keyboard: "not_checked", keyboardLayout: snapshot.profile.keyboardLayout ?? "native", keyboardReason: null,
     timeCoverage: Object.freeze({ formatting: false, localRead: false, construction: false, parse: false, localSetters: false, temporal: false, complete: false }),
-    geolocation: "not_implemented", needsReload: document.readyState !== "loading", reasons: []
+    geolocation: Object.keys(snapshot.profile.geolocation).length ? "not_implemented" : "native", needsReload: document.readyState !== "loading", reasons: []
   };
   if (existing !== undefined) {
     report.needsReload = true;
@@ -40,8 +40,10 @@ export function installMainRuntime(snapshot: RuntimeSnapshot): PageRuntimeReport
   }
   else if (document.readyState !== "loading") report.reasons.push("Ранняя установка пропущена. Поздняя подмена не выполняется; перезагрузите документ.");
   else {
-    try { installLanguageRuntime(snapshot.profile); report.languages = "installed"; }
-    catch (error) { report.reasons.push(error instanceof Error ? error.message : "Ошибка языкового модуля."); }
+    if (snapshot.profile.languages) {
+      try { installLanguageRuntime({ language: snapshot.profile.languages[0]!, languages: snapshot.profile.languages }); report.languages = "installed"; }
+      catch (error) { report.reasons.push(error instanceof Error ? error.message : "Ошибка языкового модуля."); }
+    }
     const time = installTimeRuntime(snapshot.profile);
     report.locale = time.locale; report.time = time.time; report.temporal = time.temporal;
     report.timeCoverage = time.timeCoverage; report.timeCompatibility = time.timeCompatibility;
@@ -50,7 +52,7 @@ export function installMainRuntime(snapshot: RuntimeSnapshot): PageRuntimeReport
     report.keyboard = keyboard.status;
     report.keyboardReason = keyboard.reason ?? null;
     if (keyboard.reason) report.reasons.push(keyboard.reason);
-    if (snapshot.geolocationOneShot) {
+    if (snapshot.geolocationOneShot && Object.keys(snapshot.profile.geolocation).length) {
       try {
         const result = installGeolocationRuntime(snapshot.profile.geolocation);
         report.geolocation = result.status;

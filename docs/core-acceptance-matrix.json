@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
-  "packageVersion": "0.3.1",
-  "date": "2026-11-23",
+  "packageVersion": "0.3.2",
+  "date": "2026-11-26",
   "status": "BLOCKED_NATIVE_BROWSER_ACCEPTANCE",
   "requiredCases": [
     {
@@ -25,13 +25,13 @@
     {
       "id": "geolocation",
       "title": "get/watch/clear и разрешения",
-      "procedure": "Все поля профиля, async, secure/policy/denied/prompt, отсутствие передачи реальных координат и очистка watch",
+      "procedure": "Полный профиль и каждая частичная подмена; незаданные поля из native get/watch, сохранение timestamp/options/errors, secure/policy/denied/prompt и очистка watch",
       "required": true
     },
     {
       "id": "locale_time",
       "title": "Локали и время",
-      "procedure": "Date/Intl: зима/лето/DST, конструктор/ISO/локальные setters, явные зоны, timestamp/ISO/JSON/clone",
+      "procedure": "Независимые locale-only/timezone-only/native профили; Date/Intl: зима/лето/DST, конструктор/ISO/локальные setters, явные зоны, timestamp/ISO/JSON/clone; JSON v2 с одной широтой на ПК с другой локалью и поясом",
       "required": true
     },
     {

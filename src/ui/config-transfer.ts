@@ -16,12 +16,12 @@ function configurationRows(config: SavedConfiguration): Row[] {
   const rows: Row[] = [{ label: "Название профиля", cell: profile ? plain(profile.name) : localized("Сохранённого профиля нет.") }];
   for (const name of ["latitude", "longitude", "accuracy", "altitude", "altitudeAccuracy", "speed", "heading"] as const) {
     const value = profile?.geolocation[name];
-    rows.push({ label: PROFILE_FIELD_LABELS[name], cell: value === null ? localized("Неизвестно") : plain(value === undefined ? "—" : String(value)) });
+    rows.push({ label: PROFILE_FIELD_LABELS[name], cell: value === null ? localized("Неизвестно") : value === undefined ? localized("Значение браузера") : plain(String(value)) });
   }
   rows.push(
-    { label: "Языки", cell: plain(profile?.languages.join(", ") ?? "—") },
-    { label: "Локаль форматов", cell: plain(profile?.locale ?? "—") },
-    { label: "Часовой пояс", cell: plain(profile?.timeZone ?? "—") },
+    { label: "Языки", cell: profile?.languages ? plain(profile.languages.join(", ")) : localized("Значение браузера") },
+    { label: "Локаль форматов", cell: profile?.locale ? plain(profile.locale) : localized("Значение браузера") },
+    { label: "Часовой пояс", cell: profile?.timeZone ? plain(profile.timeZone) : localized("Значение браузера") },
     { label: "Карта раскладки", cell: profile ? localized(keyboardLayout(profile.keyboardLayout).label) : plain("—") },
     { label: "Выбор сайтов", cell: localized(config.sitePolicy.mode === "selected_sites" ? "Только выбранные сайты" : "Все сайты с уже выданным доступом") },
     { label: "Выбранные сайты", cell: plain(config.sitePolicy.include.map((rule) => `${rule.schemes.join(" / ")}://${rule.includeSubdomains ? "*." : ""}${rule.host}`).join("\n") || "—") },

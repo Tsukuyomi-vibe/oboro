@@ -22,18 +22,20 @@ export function mountProfileEditor(): void {
   }
   let baseline = ""; let revision = 0; let loaded = false; let busy = false; let stale = false;
   let requestVersion = 0; let attempted = false; let changedWhileSaving = false;
+  const touched = new Set<ProfileField>();
   const input = (name: ProfileField): HTMLInputElement | HTMLSelectElement => form.querySelector<HTMLInputElement | HTMLSelectElement>(`[name="${name}"]`)!;
   const read = (): ProfileFields => Object.fromEntries(PROFILE_FIELDS.map((name) => [name, input(name).value])) as ProfileFields;
   const fill = (values: ProfileFields): void => { for (const name of PROFILE_FIELDS) input(name).value = values[name]; };
   const isDirty = (): boolean => loaded && JSON.stringify(read()) !== baseline;
   const renderIssues = (issues: readonly ValidationIssue[]): void => {
+    const visible = issues.filter((issue) => attempted || touched.has(profileFieldForPath(issue.path) ?? "name"));
     for (const name of PROFILE_FIELDS) {
-      const issue = issues.find((entry) => profileFieldForPath(entry.path) === name);
+      const issue = visible.find((entry) => profileFieldForPath(entry.path) === name);
       input(name).setAttribute("aria-invalid", String(Boolean(issue)));
       const error = document.getElementById("profile-error-" + name);
       if (error) setText(error, issue?.message ?? "");
     }
-    setText(validation, issues.map((issue) => `${PROFILE_FIELD_LABELS[profileFieldForPath(issue.path) ?? "name"]}: ${issue.message}`).join("\n"));
+    setText(validation, visible.map((issue) => `${PROFILE_FIELD_LABELS[profileFieldForPath(issue.path) ?? "name"]}: ${issue.message}`).join("\n"));
   };
   const validate = (): boolean => {
     try { profileDraftFromFields(read()); renderIssues([]); return true; }
@@ -55,7 +57,7 @@ export function mountProfileEditor(): void {
     window.dispatchEvent(new CustomEvent(PROFILE_DRAFT_EVENT, { detail }));
   };
   const accept = (profile: RegionalProfile | null): void => {
-    revision = profile?.revision ?? 0; loaded = true; stale = false; attempted = false;
+    revision = profile?.revision ?? 0; loaded = true; stale = false; attempted = false; touched.clear();
     fill(profileToFields(profile)); baseline = JSON.stringify(read()); update();
   };
   const refresh = async (force = false): Promise<void> => {
@@ -74,8 +76,15 @@ export function mountProfileEditor(): void {
       stale = true; setText(feedback, error instanceof Error ? error.message : String(error)); feedback.dataset.kind = "error"; update();
     }
   };
-  form.addEventListener("input", () => { setText(feedback, ""); update(); });
-  form.addEventListener("change", update);
+  const edited = (event: Event): void => {
+    const target = event.target;
+    if (target instanceof HTMLInputElement || target instanceof HTMLSelectElement) {
+      if ((PROFILE_FIELDS as readonly string[]).includes(target.name)) touched.add(target.name as ProfileField);
+    }
+    setText(feedback, ""); update();
+  };
+  form.addEventListener("input", edited);
+  form.addEventListener("change", edited);
   form.addEventListener("submit", (event) => {
     event.preventDefault(); attempted = true;
     if (!loaded || busy || stale) { update(); return; }

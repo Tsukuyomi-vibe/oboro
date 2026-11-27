@@ -7,10 +7,10 @@ export const BRIDGE_SCRIPT_ID = "regional-bridge-v1";
 export const PAGE_REPORT = "regional-runtime:v1";
 export const PAGE_QUERY = "regional-runtime-query:v1";
 export const FRAME_CHANNEL = "regional-frame:v1";
-export const RUNTIME_IMPLEMENTATION = 7;
+export const RUNTIME_IMPLEMENTATION = 8;
 export const TIME_RUNTIME_COMPLETE = true;
 export const TIME_RUNTIME_LIMITATIONS: readonly string[] = Object.freeze([]);
-export type TemporalStatus = "installed" | "absent" | "unsupported" | "error" | "not_checked";
+export type TemporalStatus = "native" | "installed" | "absent" | "unsupported" | "error" | "not_checked";
 export type KeyboardStatus = "native" | "installed" | "unsupported" | "error" | "not_checked";
 export interface TimeCompatibility {
   status: "passed" | "failed" | "not_run";
@@ -35,16 +35,16 @@ export interface RuntimeReport {
   profileRevision: number;
   policyRevision: number;
   readyState: DocumentReadyState;
-  languages: "installed" | "error";
-  locale: "installed" | "error";
-  time: "installed" | "partial" | "error";
+  languages: "native" | "installed" | "error";
+  locale: "native" | "installed" | "error";
+  time: "native" | "installed" | "partial" | "error";
   temporal: TemporalStatus;
   keyboard: KeyboardStatus;
   keyboardLayout: KeyboardLayoutId;
   keyboardReason: string | null;
   timeCompatibility: Readonly<TimeCompatibility>;
   timeCoverage: Readonly<TimeCoverage>;
-  geolocation: "not_implemented" | "installed" | "unsupported" | "error";
+  geolocation: "native" | "not_implemented" | "installed" | "unsupported" | "error";
   needsReload: boolean;
   reasons: string[];
 }

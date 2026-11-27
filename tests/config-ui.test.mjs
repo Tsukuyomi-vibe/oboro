@@ -4,6 +4,7 @@ import { readFile } from "node:fs/promises";
 import { optionsPage, exampleProfile, testSitePolicy } from "./helpers/options-page.mjs";
 
 const fixture = JSON.parse(await readFile(new URL("./fixtures/config/v1.json", import.meta.url), "utf8"));
+const partialFixture = JSON.parse(await readFile(new URL("./fixtures/config/v2.json", import.meta.url), "utf8"));
 const copy = value => JSON.parse(JSON.stringify(value));
 async function selectFile(ui, value, { size } = {}) {
   const text = typeof value === "string" ? value : JSON.stringify(value);
@@ -34,7 +35,7 @@ test("configuration UI exports a real JSON download with manifest version, saved
   assert.equal(captured.length, 1); assert.equal(captured[0].name, "oboro-config-" + ui.window.chrome.runtime.getManifest().version + ".json");
   assert.equal(captured[0].blob.type, "application/json");
   const file = JSON.parse(await blobText(ui, captured[0].blob));
-  assert.equal(file.oboroVersion, ui.window.chrome.runtime.getManifest().version); assert.equal(file.schemaVersion, 1);
+  assert.equal(file.oboroVersion, ui.window.chrome.runtime.getManifest().version); assert.equal(file.schemaVersion, 2);
   assert.equal(file.config.profile.name, exampleProfile().name); assert.equal(file.config.ui.language, "en"); assert.equal(file.config.ui.theme, "dark");
   assert.equal("revision" in file.config.profile, false); assert.deepEqual(ui.snapshot(), before);
   assert.equal(ui.query('[name="name"]').value, "unsaved draft"); assert.equal(ui.calls.includes("permission.request"), false);
@@ -53,6 +54,29 @@ test("configuration UI previews exact changes safely and cancel preserves saved 
   changeLanguage(ui, "ru"); assert.match(ui.query("#config-source").textContent, /Файл oboro/);
   changeLanguage(ui, "en"); assert.match(ui.query("#config-source").textContent, /File from oboro/);
   ui.click("#import-config-cancel"); assert.equal(ui.query("#config-preview").hidden, true); assert.deepEqual(ui.snapshot(), before);
+});
+
+test("sparse JSON import clears old overrides, shows native values and applies without language header rules", async t => {
+  const ui = optionsPage({ profile: exampleProfile(), policy: testSitePolicy(), origins: ["https://example.com/*"], proof: true, language: null });
+  t.after(ui.close); await ui.flush();
+  ui.click("#apply-profile"); await ui.flush(); assert.equal(ui.installed().rules.length, 1);
+  await selectFile(ui, partialFixture);
+  assert.match(ui.query("#config-source").textContent, /File from oboro 0.3.2, format 2/);
+  assert.match(ui.query("#config-change-rows").textContent, /Browser value/);
+  ui.click("#import-config-confirm"); await ui.flush();
+  assert.deepEqual(ui.snapshot().regionalProfile.geolocation, { latitude: 52.52 });
+  assert.equal(ui.snapshot().activationState.enabled, false);
+  for (const name of ["longitude", "accuracy", "altitude", "altitudeAccuracy", "speed", "heading", "languages", "locale", "timeZone"]) {
+    assert.equal(ui.query(`#profile-form [name="${name}"]`).value, "", name);
+  }
+  ui.set("name", "123 renamed"); ui.click("#save-profile"); await ui.flush();
+  const saved = ui.snapshot().regionalProfile;
+  for (const key of ["languages", "language", "locale", "timeZone"]) assert.equal(Object.hasOwn(saved, key), false, key);
+  assert.deepEqual(saved.geolocation, { latitude: 52.52 });
+  ui.click("#apply-profile"); await ui.flush();
+  assert.equal(ui.snapshot().activationState.status, "READY");
+  assert.equal(ui.installed().rules.length, 0);
+  assert.equal(ui.calls.includes("permission.request"), false);
 });
 
 test("configuration UI restores all settings, stays OFF, persists language/theme and grants only on an explicit click", async t => {
@@ -140,7 +164,7 @@ test("dirty profile/mode drafts block replacement and remain in their forms", as
 
 test("invalid/future files and conflicting previews never overwrite settings", async t => {
   const ui = optionsPage({ profile: exampleProfile(), language: null }); t.after(ui.close); await ui.flush();
-  const before = ui.snapshot(); const future = copy(fixture); future.schemaVersion = 2;
+  const before = ui.snapshot(); const future = copy(fixture); future.schemaVersion = 3;
   await selectFile(ui, future); assert.match(ui.query("#config-feedback").textContent, /newer configuration format/);
   assert.equal(ui.query("#config-preview").hidden, true); assert.deepEqual(ui.snapshot(), before);
   await selectFile(ui, "{invalid"); assert.match(ui.query("#config-feedback").textContent, /Could not read/); assert.deepEqual(ui.snapshot(), before);

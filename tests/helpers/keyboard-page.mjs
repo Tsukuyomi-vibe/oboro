@@ -1,7 +1,7 @@
 import {runtimePage} from "./runtime-page.mjs";
 
 // Realm-local WebIDL-shaped test double. This is not native Chrome acceptance.
-const fixture=String.raw`
+export const nativeKeyboardFixture=String.raw`
   const maps=new WeakMap(); const token={};
   const entries=[['KeyY','native-y'],['KeyZ','native-z'],['Space',' '],['NativeOnly','native-entry']];
   function contents(receiver){if(!maps.has(receiver))throw new TypeError('Illegal invocation');return maps.get(receiver)}
@@ -45,5 +45,5 @@ const fixture=String.raw`
   globalThis.isSecureContext=true;
 `;
 export function keyboardPage({layout="de-qwertz",extra="",...options}={}){
-  return runtimePage({...options,keyboardLayout:layout,globals:{EventTarget,Event,DOMException,...options.globals},beforeRuntime:fixture,extra});
+  return runtimePage({...options,keyboardLayout:layout,globals:{EventTarget,Event,DOMException,...options.globals},beforeRuntime:nativeKeyboardFixture,extra});
 }

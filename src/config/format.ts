@@ -1,4 +1,4 @@
-import { parseProfileDraft, parseRegionalProfile, profileToDraft } from "../profile/validation";
+import { parseProfileDraft, parseLegacyProfileDraft, parseRegionalProfile, profileToDraft } from "../profile/validation";
 import { normalizeHost, parseSitePolicyDraft } from "../sites/policy";
 import {
   CONFIG_FORMAT, CONFIG_SCHEMA_VERSION, MAX_CONFIG_BYTES, ConfigurationError,
@@ -51,23 +51,26 @@ export function parseUiRestore(value: unknown): UiRestoreRecord | null {
   }
   return Object.freeze({ schemaVersion: 1, token: record.token, ui: parseUiPreferences(record.ui) });
 }
-function readVersionOne(value: unknown): ConfigurationFile {
+function readVersion(value: unknown, version: 1 | 2): ConfigurationFile {
   const root = configObject(value, ["format", "schemaVersion", "oboroVersion", "config", "permissionHints"]);
-  if (root.format !== CONFIG_FORMAT || root.schemaVersion !== 1 || typeof root.oboroVersion !== "string" ||
+  if (root.format !== CONFIG_FORMAT || root.schemaVersion !== version || typeof root.oboroVersion !== "string" ||
       !/^\d{1,5}(?:\.\d{1,5}){1,3}$/.test(root.oboroVersion) || root.oboroVersion.split(".").some((part) => Number(part) > 65535)) {
     throw new ConfigurationError("INVALID_CONFIG", "В конфигурации отсутствует корректная версия oboro.");
   }
   const config = configObject(root.config, ["profile", "sitePolicy", "ui"]);
   return Object.freeze({
-    format: CONFIG_FORMAT, schemaVersion: 1, oboroVersion: root.oboroVersion,
-    config: Object.freeze({ profile: config.profile === null ? null : parseProfileDraft(config.profile), sitePolicy: parseSitePolicyDraft(config.sitePolicy), ui: parseUiPreferences(config.ui) }),
+    format: CONFIG_FORMAT, schemaVersion: CONFIG_SCHEMA_VERSION, oboroVersion: root.oboroVersion,
+    config: Object.freeze({ profile: config.profile === null ? null : version === 1 ? parseLegacyProfileDraft(config.profile) : parseProfileDraft(config.profile), sitePolicy: parseSitePolicyDraft(config.sitePolicy), ui: parseUiPreferences(config.ui) }),
     permissionHints: parsePermissionHints(root.permissionHints)
   });
 }
 
 // Published readers are retained. Future schema changes add a pure migration
 // into the current DTO; app-version comparisons never select a schema reader.
-const READERS: Readonly<Record<number, (value: unknown) => ConfigurationFile>> = Object.freeze({ 1: readVersionOne });
+const READERS: Readonly<Record<number, (value: unknown) => ConfigurationFile>> = Object.freeze({
+  1: (value) => readVersion(value, 1), // V1 omitted geo fields mean explicit null.
+  2: (value) => readVersion(value, 2)  // V2 omitted fields remain native on every PC.
+});
 export function readConfigurationFile(value: unknown): ConfigurationFile {
   if (typeof value !== "object" || value === null || !("format" in value) || value.format !== CONFIG_FORMAT || !("schemaVersion" in value)) {
     throw new ConfigurationError("INVALID_CONFIG", "Это не файл конфигурации oboro.");
@@ -88,10 +91,11 @@ export function decodeConfiguration(text: unknown): DecodedConfiguration {
     const sourceSchemaVersion = "schemaVersion" in value && typeof value.schemaVersion === "number" ? value.schemaVersion : file.schemaVersion;
     return Object.freeze({ kind: "configuration", sourceOboroVersion: file.oboroVersion, sourceSchemaVersion, file });
   }
-  // Legacy v1 profile files never recorded an app version. Do not invent one
+  // Standalone profile files never recorded an app version. Do not invent one
   // or overwrite unrelated settings when adapting that narrower format.
   const profile = parseRegionalProfile(value);
-  return Object.freeze({ kind: "profile", sourceOboroVersion: null, sourceSchemaVersion: 1, profile: profileToDraft(profile) });
+  const sourceSchemaVersion = typeof value === "object" && value !== null && "schemaVersion" in value && typeof value.schemaVersion === "number" ? value.schemaVersion : profile.schemaVersion;
+  return Object.freeze({ kind: "profile", sourceOboroVersion: null, sourceSchemaVersion, profile: profileToDraft(profile) });
 }
 export function serializeConfiguration(value: unknown): string {
   const text = JSON.stringify(readConfigurationFile(value), null, 2) + "\n";

@@ -1,11 +1,11 @@
 import {
   MAX_PROFILE_LANGUAGES, PROFILE_SCHEMA_VERSION, ProfileValidationError,
-  type ProfileDraft, type RegionalGeolocation, type RegionalProfile
+  type ProfileDraft, type RegionalGeolocation, type RegionalProfile, type ValidationIssue, type GeolocationOverrides
 } from "./types";
 import { isKeyboardLayoutId, type KeyboardLayoutId } from "../keyboard/layouts";
 
 const DRAFT_KEYS = ["name", "geolocation", "languages", "locale", "timeZone", "keyboardLayout"];
-const GEO_KEYS = ["latitude", "longitude", "accuracy", "altitude", "altitudeAccuracy", "speed", "heading"];
+const GEO_KEYS = ["latitude", "longitude", "accuracy", "altitude", "altitudeAccuracy", "speed", "heading"] as const;
 const CONTROL_CHARACTERS = /[\u0000-\u001f\u007f]/;
 
 function invalid(path: string, code: string, message: string): never {
@@ -105,6 +105,42 @@ function timeZone(value: unknown): string {
 export function parseProfileDraft(value: unknown): ProfileDraft {
   const source = object(value, "profile");
   knownKeys(source, DRAFT_KEYS, "profile");
+  const issues: ValidationIssue[] = [];
+  const read = <T>(run: () => T, fallback: T): T => {
+    try { return run(); } catch (error) {
+      if (!(error instanceof ProfileValidationError)) throw error;
+      issues.push(...error.issues); return fallback;
+    }
+  };
+  const name = read(() => {
+    const name = text(source.name, "name");
+    if (name.length > 80) invalid("name", "length", "длина имени не должна превышать 80 символов.");
+    return name;
+  }, "");
+  const geoSource = source.geolocation === undefined ? {} : read(() => object(source.geolocation, "geolocation"), {});
+  knownKeys(geoSource, GEO_KEYS, "geolocation");
+  const geo: Partial<RegionalGeolocation> = {};
+  for (const key of GEO_KEYS) {
+    if (geoSource[key] === undefined) continue;
+    const nullable = !["latitude", "longitude", "accuracy"].includes(key);
+    const bounds = key === "latitude" ? [-90, 90] : key === "longitude" ? [-180, 180]
+      : key === "heading" ? [0, 360] : key === "altitude" ? [-Infinity, Infinity] : [0, Infinity];
+    const parsed = read(() => geoSource[key] === null && nullable ? null : finiteNumber(geoSource[key], "geolocation." + key, bounds[0]!, bounds[1]!, key === "heading"), null);
+    (geo as Record<string, number | null>)[key] = parsed;
+  }
+  const languages = source.languages === undefined ? undefined : read(() => normalizeLanguages(source.languages), undefined);
+  const formats = source.locale === undefined ? undefined : read(() => locale(source.locale), undefined);
+  const zone = source.timeZone === undefined ? undefined : read(() => timeZone(source.timeZone), undefined);
+  const keyboardLayout = read(() => parseKeyboardLayout(source.keyboardLayout), "native" as const);
+  if (issues.length) { const first = issues[0]!; throw new ProfileValidationError(first.path, first.code, first.message, issues); }
+  return Object.freeze({ name, geolocation: Object.freeze(geo) as GeolocationOverrides, keyboardLayout,
+    ...(languages === undefined ? {} : { languages }), ...(formats === undefined ? {} : { locale: formats }), ...(zone === undefined ? {} : { timeZone: zone }) });
+}
+
+/** V1 required the regional values; absent nullable coordinates meant unknown. */
+export function parseLegacyProfileDraft(value: unknown): ProfileDraft {
+  const source = object(value, "profile");
+  knownKeys(source, DRAFT_KEYS, "profile");
   const name = text(source.name, "name");
   if (name.length > 80) invalid("name", "length", "длина имени не должна превышать 80 символов.");
   return Object.freeze({
@@ -138,19 +174,21 @@ export function createRegionalProfile(draft: unknown, revision: number): Regiona
   const normalized = parseProfileDraft(draft);
   if (!Number.isSafeInteger(revision) || revision < 1) invalid("revision", "revision", "ожидается положительное безопасное целое число.");
   return Object.freeze({
-    schemaVersion: PROFILE_SCHEMA_VERSION, revision, ...normalized, language: normalized.languages[0]!
+    schemaVersion: PROFILE_SCHEMA_VERSION, revision, ...normalized,
+    ...(normalized.languages ? { language: normalized.languages[0]! } : {})
   });
 }
 
 export function parseRegionalProfile(value: unknown): RegionalProfile {
   const source = object(value, "profile");
   knownKeys(source, [...DRAFT_KEYS, "schemaVersion", "revision", "language"], "profile");
-  if (source.schemaVersion !== PROFILE_SCHEMA_VERSION) invalid("schemaVersion", "unsupported_schema", "версия схемы профиля не поддерживается.");
+  if (source.schemaVersion !== 1 && source.schemaVersion !== PROFILE_SCHEMA_VERSION) invalid("schemaVersion", "unsupported_schema", "версия схемы профиля не поддерживается.");
   if (typeof source.revision !== "number" || !Number.isSafeInteger(source.revision) || source.revision < 1) invalid("revision", "revision", "ожидается положительное безопасное целое число.");
-  const parsed = createRegionalProfile({
+  const draft = {
     name: source.name, geolocation: source.geolocation, languages: source.languages,
     locale: source.locale, timeZone: source.timeZone, keyboardLayout: source.keyboardLayout
-  }, source.revision);
+  };
+  const parsed = createRegionalProfile(source.schemaVersion === 1 ? parseLegacyProfileDraft(draft) : draft, source.revision);
   if (source.language !== parsed.language) invalid("language", "inconsistent_language", "language должен совпадать с первым каноническим элементом languages.");
   return parsed;
 }

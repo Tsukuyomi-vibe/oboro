@@ -25,5 +25,6 @@ else {
   // Whitelisted numbers/booleans only: never persist console output, paths,
   // raw browser observations or environment/account identifiers.
   await writeFile(path.join(root,'artifacts/verification-summary.json'),JSON.stringify(summary,null,2)+'\n');
+  await import('./check-contrast.mjs');
   await import('./package-core.mjs');
 }

@@ -5,7 +5,7 @@ import type { TemporalStatus, TimeCompatibility } from "./types";
 function ensure(condition: unknown, message: string): asserts condition {
   if (!condition) throw new Error(message);
 }
-export function createTimeVerifier(calendar: CalendarEngine, locale: string): (temporal: TemporalStatus) => Readonly<TimeCompatibility> {
+export function createTimeVerifier(calendar: CalendarEngine, locale?: string): (temporal: TemporalStatus) => Readonly<TimeCompatibility> {
   const NativeDate = Date;
   const nativeNow = Date.now;
   const nativeUTC = Date.UTC;

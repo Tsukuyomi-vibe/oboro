@@ -2,7 +2,8 @@ type NativeFunction = (...args: unknown[]) => unknown;
 interface Patch { target: object; key: string; descriptor: PropertyDescriptor; value: unknown; }
 const CONSTRUCTORS = ["Collator", "DateTimeFormat", "NumberFormat", "PluralRules", "RelativeTimeFormat", "ListFormat", "DisplayNames", "Segmenter", "DurationFormat"] as const;
 
-export function installLocaleRuntime(locale: string, timeZone?: string): () => void {
+export function installLocaleRuntime(locale?: string, timeZone?: string): () => void {
+  if (locale === undefined && timeZone === undefined) return () => {};
   const intl = Intl as unknown as Record<string, unknown>;
   const canonicalize = Intl.getCanonicalLocales.bind(Intl);
   const concat = String.prototype.concat;
@@ -10,7 +11,8 @@ export function installLocaleRuntime(locale: string, timeZone?: string): () => v
   const numberValue = Number.prototype.valueOf;
   const bigintValue = globalThis.BigInt?.prototype.valueOf;
   const patches: Patch[] = [];
-  const locales = (value: unknown): string[] => {
+  const locales = (value: unknown): unknown => {
+    if (locale === undefined) return value;
     const list = canonicalize(value as string | string[] | undefined);
     return list.length ? list : [locale];
   };
@@ -38,6 +40,7 @@ export function installLocaleRuntime(locale: string, timeZone?: string): () => v
     patches.push({ target, key, descriptor, value });
   };
   for (const name of CONSTRUCTORS) {
+    if (locale === undefined && name !== "DateTimeFormat") continue;
     const original = intl[name];
     if (typeof original !== "function") continue;
     const callable = ["Collator", "DateTimeFormat", "NumberFormat"].includes(name);
@@ -64,11 +67,11 @@ export function installLocaleRuntime(locale: string, timeZone?: string): () => v
     const proxy = new Proxy(original, { apply: (native, receiver, args) => run(native as NativeFunction, receiver, args) });
     add(target, key, proxy);
   }
-  method(Number.prototype, "toLocaleString", (native, receiver, args) => {
+  if (locale !== undefined) method(Number.prototype, "toLocaleString", (native, receiver, args) => {
     Reflect.apply(numberValue, receiver, []);
     return Reflect.apply(native, receiver, [locales(args[0]), args[1]]);
   });
-  if (bigintValue) method(BigInt.prototype, "toLocaleString", (native, receiver, args) => {
+  if (locale !== undefined && bigintValue) method(BigInt.prototype, "toLocaleString", (native, receiver, args) => {
     Reflect.apply(bigintValue, receiver, []);
     return Reflect.apply(native, receiver, [locales(args[0]), args[1]]);
   });
@@ -77,11 +80,11 @@ export function installLocaleRuntime(locale: string, timeZone?: string): () => v
     if (Number.isNaN(value)) return Reflect.apply(native, receiver, args);
     return Reflect.apply(native, receiver, [locales(args[0]), dateOptions(args[1])]);
   });
-  method(String.prototype, "localeCompare", (native, receiver, args) => {
+  if (locale !== undefined) method(String.prototype, "localeCompare", (native, receiver, args) => {
     const left = receiverText(receiver); const right = text(args[0]);
     return Reflect.apply(native, left, [right, locales(args[1]), args[2]]);
   });
-  for (const key of ["toLocaleLowerCase", "toLocaleUpperCase"]) method(String.prototype, key, (native, receiver, args) =>
+  if (locale !== undefined) for (const key of ["toLocaleLowerCase", "toLocaleUpperCase"]) method(String.prototype, key, (native, receiver, args) =>
     Reflect.apply(native, receiverText(receiver), [locales(args[0])]));
   const applied: Patch[] = [];
   const rollback = (): void => {

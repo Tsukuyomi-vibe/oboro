@@ -1,4 +1,5 @@
-import type { RegionalGeolocation } from "../profile/types";
+import type { GeolocationOverrides, RegionalGeolocation } from "../profile/types";
+const GEO_KEYS = ["latitude", "longitude", "accuracy", "altitude", "altitudeAccuracy", "speed", "heading"] as const;
 
 const MAX_UINT32 = 4294967295;
 export function clampGeoMilliseconds(value: unknown, fallback: number): number {
@@ -23,11 +24,11 @@ function valuesObject<T extends object>(prototype: object, values: T, toJSON = t
   if (toJSON) Object.defineProperty(object, "toJSON", { value: () => ({ ...values }) });
   return Object.freeze(object);
 }
-export function syntheticPosition(profile: RegionalGeolocation, timestamp: number): GeolocationPosition {
+export function syntheticPosition(profile: RegionalGeolocation, timestamp: number, normalizeHeading = true): GeolocationPosition {
   const values = {
     latitude: profile.latitude, longitude: profile.longitude, accuracy: profile.accuracy,
     altitude: profile.altitude, altitudeAccuracy: profile.altitudeAccuracy,
-    speed: profile.speed, heading: profile.speed === 0 ? null : profile.heading
+    speed: profile.speed, heading: normalizeHeading && profile.speed === 0 ? null : profile.heading
   };
   const coords = valuesObject(globalThis.GeolocationCoordinates?.prototype ?? Object.prototype, values) as GeolocationCoordinates;
   const result = Object.create(globalThis.GeolocationPosition?.prototype ?? Object.prototype) as GeolocationPosition;
@@ -55,7 +56,8 @@ interface GeoRequest {
   cleanup: (() => void)[];
 }
 
-export function installGeolocationRuntime(profile: RegionalGeolocation): { status: "installed" | "unsupported"; reason?: string; dispose?: () => void } {
+export function installGeolocationRuntime(profile: GeolocationOverrides): { status: "native" | "installed" | "unsupported"; reason?: string; dispose?: () => void } {
+  if (!Object.keys(profile).length) return { status: "native" };
   if (!window.isSecureContext || !navigator.geolocation) return { status: "unsupported", reason: "Геолокация доступна только при наличии нативного API в secure context." };
   const geo = navigator.geolocation;
   const prototype = Object.getPrototypeOf(geo) as object;
@@ -65,11 +67,55 @@ export function installGeolocationRuntime(profile: RegionalGeolocation): { statu
   const nativeGet = descriptors[0]!.value as Geolocation["getCurrentPosition"];
   const nativeWatch = descriptors[1]!.value as Geolocation["watchPosition"];
   const nativeClear = descriptors[2]!.value as Geolocation["clearWatch"];
+  if (!GEO_KEYS.every((key) => Object.hasOwn(profile, key))) {
+    let active = true; let epoch = 0;
+    const watches = new Set<number>();
+    const overlay = (position: GeolocationPosition): GeolocationPosition => {
+      const original = position.coords;
+      const coordinates = Object.fromEntries(GEO_KEYS.map((key) => [key, Object.hasOwn(profile, key) ? profile[key] : original[key]])) as unknown as RegionalGeolocation;
+      return syntheticPosition(coordinates, position.timestamp, false);
+    };
+    function getCurrentPosition(this: Geolocation, success: PositionCallback, error?: PositionErrorCallback | null, _input?: PositionOptions): void {
+      const args = Array.from(arguments);
+      if (this !== geo || typeof success !== "function" || error != null && typeof error !== "function") { Reflect.apply(nativeGet, this, args); return; }
+      const started = epoch;
+      args[0] = function (this: unknown, position: GeolocationPosition): void { if (active && epoch === started) Reflect.apply(success, this, [overlay(position)]); };
+      if (error) args[1] = function (this: unknown, result: GeolocationPositionError): void { if (active && epoch === started) Reflect.apply(error, this, [result]); };
+      Reflect.apply(nativeGet, geo, args);
+    }
+    function watchPosition(this: Geolocation, success: PositionCallback, error?: PositionErrorCallback | null, _input?: PositionOptions): number {
+      const args = Array.from(arguments);
+      if (this !== geo || typeof success !== "function" || error != null && typeof error !== "function") return Reflect.apply(nativeWatch, this, args) as number;
+      const started = epoch; let id: number | undefined;
+      args[0] = function (this: unknown, position: GeolocationPosition): void {
+        if (active && epoch === started && (id === undefined || watches.has(id))) Reflect.apply(success, this, [overlay(position)]);
+      };
+      if (error) args[1] = function (this: unknown, result: GeolocationPositionError): void {
+        if (active && epoch === started && (id === undefined || watches.has(id))) Reflect.apply(error, this, [result]);
+      };
+      id = Reflect.apply(nativeWatch, geo, args) as number;
+      if (active && epoch === started) watches.add(id); else nativeClear.call(geo, id);
+      return id;
+    }
+    function clearWatch(this: Geolocation, watchId: number): void {
+      if (this !== geo || !arguments.length) { Reflect.apply(nativeClear, this, Array.from(arguments)); return; }
+      const id = +(watchId as number) >> 0;
+      nativeClear.call(geo, id); watches.delete(id);
+    }
+    const replacements = [getCurrentPosition, watchPosition, clearWatch];
+    for (const [index, method] of methods.entries()) {
+      Object.defineProperty(replacements[index], "length", { value: descriptors[index]!.value.length });
+      Object.defineProperty(prototype, method, { ...descriptors[index], value: replacements[index] });
+    }
+    const dispose = (): void => { active = false; epoch++; for (const id of watches) nativeClear.call(geo, id); watches.clear(); };
+    window.addEventListener("pagehide", dispose); window.addEventListener("pageshow", () => { active = true; });
+    return { status: "installed", dispose };
+  }
   const query = navigator.permissions?.query?.bind(navigator.permissions);
   const now = Date.now.bind(Date);
   const schedule = window.setTimeout.bind(window);
   const cancel = window.clearTimeout.bind(window);
-  const coordinates = Object.freeze({ ...profile });
+  const coordinates = Object.freeze({ ...profile }) as RegionalGeolocation;
   const requests = new Set<GeoRequest>();
   const watches = new Map<number, GeoRequest>();
   let nextWatchId = 1;

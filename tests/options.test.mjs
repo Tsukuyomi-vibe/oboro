@@ -38,7 +38,7 @@ test('I20: форма сохраняет все геополя, языки/фо�
   current.set('altitude','');current.set('altitudeAccuracy','');current.set('speed','');current.set('heading','');
   current.click('#save-profile');await current.flush();
   const geo=current.snapshot().regionalProfile.geolocation;
-  assert.deepEqual([geo.altitude,geo.altitudeAccuracy,geo.speed,geo.heading],[null,null,null,null]);
+  for(const field of ['altitude','altitudeAccuracy','speed','heading'])assert.equal(Object.hasOwn(geo,field),false);
 });
 
 test('I20: ошибки проверяются до передачи сообщения и отмечаются у соответствующего поля',async t=>{
