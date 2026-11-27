@@ -27,7 +27,7 @@ async function directory(relative,prefix){
   return entries;
 }
 if(probe.version!==pkg.version||matrix.packageVersion!==pkg.version)throw Error('Stale probe build or browser matrix version');
-const docs=['docs/releases/'+pkg.version+'.md','docs/core-acceptance-matrix.json','docs/core-package-readme.en.md','docs/core-package-readme.md','docs/configuration-format.md','schemas/oboro-config.v1.schema.json','schemas/oboro-config.v2.schema.json','docs/privacy.md','artifacts/verification-summary.json','artifacts/oboro-'+pkg.version+'-contrast.json'];
+const docs=['docs/releases/'+pkg.version+'.md','docs/core-acceptance-matrix.json','docs/core-package-readme.en.md','docs/core-package-readme.md','docs/configuration-format.md','schemas/oboro-config.v1.schema.json','schemas/oboro-config.v2.schema.json','schemas/oboro-config.v3.schema.json','docs/privacy.md','artifacts/verification-summary.json','artifacts/oboro-'+pkg.version+'-contrast.json'];
 async function packagedReadmes(prefix,englishFile,russianFile){
   const translations=new Map([[englishFile,'README.md'],[russianFile,'README.ru.md']]);
   const entries=[];

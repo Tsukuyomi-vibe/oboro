@@ -14,28 +14,24 @@ const read = file => readFile(new URL(file, import.meta.url), "utf8");
 test("only name is required; untouched inputs neither become overrides nor produce latitude errors", async t => {
   const ui = optionsPage({ language: null }); t.after(ui.close); await ui.flush();
   assert.deepEqual([...ui.document.querySelectorAll('#profile-form [required]')].map(field => field.name), ["name"]);
-  for (const name of ["latitude", "longitude", "accuracy", "altitude", "altitudeAccuracy", "speed", "heading", "languages", "locale", "timeZone"]) assert.equal(ui.query(`[name="${name}"]`).value, "", name);
+  for (const name of ["latitude", "longitude", "languages", "locale", "timeZone"]) assert.equal(ui.query(`[name="${name}"]`).value, "", name);
+  for (const name of ["accuracy", "altitude", "altitudeAccuracy", "speed", "heading"]) assert.equal(ui.query(`[name="${name}"]`), null);
   ui.set("name", "123");
   assert.equal(ui.query("#profile-error-latitude").textContent, ""); assert.equal(ui.query("#profile-validation").textContent, "");
   ui.submit("#profile-form"); await ui.flush();
   const saved = ui.snapshot().regionalProfile;
-  assert.equal(saved.name, "123"); assert.equal(saved.schemaVersion, 2); assert.deepEqual(saved.geolocation, {});
+  assert.equal(saved.name, "123"); assert.equal(saved.schemaVersion, 3); assert.deepEqual(saved.geolocation, {});
   for (const key of ["languages", "language", "locale", "timeZone"]) assert.equal(Object.hasOwn(saved, key), false, key);
 });
 
-test("every input is independently optional; zero and explicit unknown stay distinct from native", () => {
+test("every remaining input is independently optional; zero stays distinct from native", () => {
   const blank = form.profileToFields(null); blank.name = "123";
   assert.deepEqual(form.profileDraftFromFields(blank), { name: "123", geolocation: {}, keyboardLayout: "native" });
-  for (const [name, value] of [["latitude", "0"], ["longitude", "0"], ["accuracy", "0"], ["altitude", "0"], ["altitudeAccuracy", "0"], ["speed", "0"], ["heading", "0"], ["languages", "fr-FR, en"], ["locale", "fr-FR"], ["timeZone", "Asia/Tokyo"], ["keyboardLayout", "de-qwertz"]]) {
+  for (const [name, value] of [["latitude", "0"], ["longitude", "0"], ["languages", "fr-FR, en"], ["locale", "fr-FR"], ["timeZone", "Asia/Tokyo"], ["keyboardLayout", "de-qwertz"]]) {
     const draft = form.profileDraftFromFields({ ...blank, [name]: value });
-    if (["latitude", "longitude", "accuracy", "altitude", "altitudeAccuracy", "speed", "heading"].includes(name)) assert.deepEqual(draft.geolocation, { [name]: 0 });
+    if (["latitude", "longitude"].includes(name)) assert.deepEqual(draft.geolocation, { [name]: 0 });
     const roundTrip = form.profileToFields(draft); assert.equal(roundTrip[name], value);
     for (const other of ["languages", "locale", "timeZone"]) if (other !== name) assert.equal(Object.hasOwn(draft, other), false);
-  }
-  for (const name of ["altitude", "altitudeAccuracy", "speed", "heading"]) {
-    const draft = form.profileDraftFromFields({ ...blank, [name]: "unknown" });
-    assert.equal(draft.geolocation[name], null); assert.equal(form.profileToFields(draft)[name], "unknown");
-    assert.deepEqual(form.profileDraftFromFields({ ...form.profileToFields(draft), [name]: "" }).geolocation, {});
   }
 });
 
@@ -47,7 +43,7 @@ test("native profile leaves all API functions and host values unchanged", () => 
   assert.deepEqual(partialApi.compileNetworkRules(page.snapshot), []);
 });
 
-for (const [field, replacement] of [["latitude", 52.52], ["longitude", -80], ["accuracy", 0], ["altitude", 0], ["altitudeAccuracy", null], ["speed", 0], ["heading", null]]) {
+for (const [field, replacement] of [["latitude", 52.52], ["longitude", -80]]) {
   test(`partial geolocation replaces only ${field} in each native response`, async () => {
     const page = partialBrowser({ name: "123", geolocation: { [field]: replacement } }, { longitude: 135, locale: "ja-JP", timeZone: "Asia/Tokyo" });
     assert.equal(page.run("nativeGeoCalls"), 0); assert.equal(page.report.geolocation, "installed");
@@ -92,17 +88,17 @@ test("language, locale, time zone and keyboard can each be selected independentl
   assert.equal(await keyboard.run("navigator.keyboard.getLayoutMap().then(map=>map.get('KeyY'))"), "z");
 });
 
-test("v1 backups migrate without reinterpreting old unknown coordinates as native", async () => {
+test("v1 backups migrate to v3 and drop retired geolocation settings", async () => {
   const old = JSON.parse(await read("./fixtures/config/v1.json")); const migrated = form.decodeConfiguration(JSON.stringify(old));
-  assert.equal(migrated.sourceSchemaVersion, 1); assert.equal(migrated.file.schemaVersion, 2);
-  assert.deepEqual(migrated.file.config, old.config);
-  const fields = form.profileToFields(migrated.file.config.profile); assert.equal(fields.altitudeAccuracy, "unknown");
+  assert.equal(migrated.sourceSchemaVersion, 1); assert.equal(migrated.file.schemaVersion, 3);
+  assert.deepEqual(migrated.file.config, { ...old.config, profile: { ...old.config.profile, geolocation: { latitude: 52.52, longitude: 13.405 } } });
+  const fields = form.profileToFields(migrated.file.config.profile); for (const key of ["accuracy", "altitude", "altitudeAccuracy", "speed", "heading"]) assert.equal(Object.hasOwn(fields, key), false);
   const invalid = structuredClone(old); delete invalid.config.profile.geolocation.latitude;
   assert.throws(() => form.decodeConfiguration(JSON.stringify(invalid)));
 });
 
 test("the same latitude-only JSON keeps distinct native locale, zone, keyboard and longitude on two PCs", () => {
-  const file = { format: "oboro-config", schemaVersion: 2, oboroVersion: "0.3.2", config: { profile: { name: "123", geolocation: { latitude: 52.52 } }, sitePolicy: { mode: "selected_sites", include: [], exclude: [] }, ui: { language: "en", theme: "system" } }, permissionHints: { origins: [] } };
+  const file = { format: "oboro-config", schemaVersion: 3, oboroVersion: "0.3.3", config: { profile: { name: "123", geolocation: { latitude: 52.52 } }, sitePolicy: { mode: "selected_sites", include: [], exclude: [] }, ui: { language: "en", theme: "system" } }, permissionHints: { origins: [] } };
   const text = form.serializeConfiguration(file);
   const driver = `import {readFileSync} from 'node:fs';const {partialBrowser}=await import(process.argv[1]);const {file,pc}=JSON.parse(readFileSync(0,'utf8'));const page=partialBrowser(file.config.profile,pc);page.run("navigator.geolocation.getCurrentPosition(position=>received.push(position))");await page.flush();console.log(JSON.stringify({before:page.json('before'),after:page.json('values()'),coords:page.json('received[0].coords'),keyboard:await page.run("navigator.keyboard.getLayoutMap().then(map=>map.get('KeyY'))"),profile:page.snapshot.profile}));`;
   const results = [];

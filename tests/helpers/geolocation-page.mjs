@@ -1,69 +1,62 @@
 import vm from "node:vm";
 import { build } from "esbuild";
 import { fileURLToPath } from "node:url";
-import { readFile } from "node:fs/promises";
 const root = fileURLToPath(new URL("../../", import.meta.url));
-const result = await build({ entryPoints: [root + "src/runtime/geolocation.ts"], bundle: true, write: false, format: "iife", globalName: "GeoRuntime", platform: "browser", logLevel: "silent" });
-const source = result.outputFiles[0].text;
-const example = JSON.parse(await readFile(new URL("../../examples/berlin.regional-profile.json", import.meta.url), "utf8"));
+const built = await build({ entryPoints: [root + "src/runtime/geolocation.ts"], bundle: true, write: false, format: "iife", globalName: "GeoRuntime", platform: "browser", logLevel: "silent" });
 
-export function geoPage({ permission = "granted", nativeMode = "success", delay = 0, hidden = false } = {}) {
-  let clock = 1_700_000_000_000;
-  let nextTimer = 1;
+export function geoPage({ permission = "granted", nativeMode = "success", delay = 0, secure = true, policyAllowed = true, profile = { latitude: 52.52, longitude: 13.405 } } = {}) {
+  let clock = 1700000000000, serial = 0;
   const timers = new Map();
-  const context = vm.createContext({
-    URL, console, clockNow: () => clock,
-    setTimeout: (callback, delay = 0) => { const id = nextTimer++; timers.set(id, { callback, due: clock + delay }); return id; },
-    clearTimeout: (id) => timers.delete(id)
-  });
+  const context = vm.createContext({ console, clockNow: () => clock,
+    setTimeout: callback => { const id = ++serial; timers.set(id, { callback, due: clock + delay }); return id; },
+    clearTimeout: id => timers.delete(id) });
   vm.runInContext(`
-    class Hub {
-      listeners = new Map();
-      addEventListener(type, fn) { const set = this.listeners.get(type) ?? new Set(); set.add(fn); this.listeners.set(type, set); }
-      removeEventListener(type, fn) { this.listeners.get(type)?.delete(fn); }
-      emit(type) { for (const fn of [...(this.listeners.get(type) ?? [])]) fn(); }
+    const handlers=new Map();globalThis.window=globalThis;globalThis.isSecureContext=${secure};
+    globalThis.addEventListener=(type,fn)=>{const entries=handlers.get(type)??[];entries.push(fn);handlers.set(type,entries)};
+    globalThis.emitWindow=type=>{for(const fn of handlers.get(type)??[])fn()};
+    globalThis.document={permissionsPolicy:{allowsFeature:()=>${policyAllowed}}};
+    globalThis.nativePermission=${JSON.stringify(permission)};globalThis.nativeMode=${JSON.stringify(nativeMode)};
+    globalThis.nativeCoords={latitude:-1,longitude:10,accuracy:17,altitude:40,altitudeAccuracy:3,speed:0,heading:92};
+    globalThis.calls=[];globalThis.nativeCalls=0;globalThis.nativeWatches=0;globalThis.nativeClears=0;globalThis.nativeOptions=null;
+    globalThis.nativeError={code:1,message:'Native error'};
+    const watches=new Map();let nextId=100;globalThis.nativeWatchCount=()=>watches.size;
+    function deliver(success,error,id){
+      const timer=setTimeout(()=>{
+        if(id!==undefined){const watch=watches.get(id);if(!watch)return;watch.timers.delete(timer)}
+        if(nativePermission==='denied'||!document.permissionsPolicy.allowsFeature('geolocation')||nativeMode!=='success'){
+          nativeError.code=nativePermission==='denied'||!document.permissionsPolicy.allowsFeature('geolocation')||nativeMode==='denied'?1:nativeMode==='timeout'?3:2;
+          if(error)Reflect.apply(error,undefined,[nativeError]);return;
+        }
+        nativePermission='granted';
+        const coords=Object.freeze({...nativeCoords});globalThis.nativePosition=Object.freeze({coords,timestamp:clockNow()});
+        Reflect.apply(success,undefined,[nativePosition]);
+      });
+      if(id!==undefined)watches.get(id).timers.add(timer);
     }
-    const events = new Hub();
-    globalThis.addEventListener = events.addEventListener.bind(events);
-    globalThis.emitWindow = events.emit.bind(events);
-    globalThis.window = globalThis; globalThis.isSecureContext = true;
-    globalThis.document = new Hub(); document.visibilityState = ${JSON.stringify(hidden ? "hidden" : "visible")};
-    document.permissionsPolicy = { allowsFeature: () => true };
-    Date.now = clockNow;
-    globalThis.permission = new Hub(); permission.state = ${JSON.stringify(permission)};
-    globalThis.calls = []; globalThis.nativeCalls = 0; globalThis.nativeWatches = 0; globalThis.nativeClears = 0; globalThis.realTouched = 0;
-    const nativeTimers = new Map(); let nativeId = 100;
-    function nativeRequest(success, error, options) {
-      globalThis.nativeOptions = options;
-      return setTimeout(() => {
-        if (${JSON.stringify(nativeMode)} === 'denied') { permission.state = 'denied'; error({code: 1}); return; }
-        if (${JSON.stringify(nativeMode)} === 'unavailable') { error({code: 2}); return; }
-        permission.state = 'granted';
-        success({ get coords() { realTouched++; return { latitude: -1 }; } });
-      }, ${delay});
+    function validate(receiver,success,error){if(receiver!==navigator.geolocation)throw new TypeError('Illegal invocation');if(typeof success!=='function'||error!=null&&typeof error!=='function')throw new TypeError('Invalid callback')}
+    class Geolocation{
+      getCurrentPosition(success,error,options){validate(this,success,error);nativeCalls++;nativeOptions=options;deliver(success,error)}
+      watchPosition(success,error,options){validate(this,success,error);nativeWatches++;nativeOptions=options;const id=++nextId;watches.set(id,{success,error,timers:new Set()});deliver(success,error,id);return id}
+      clearWatch(id){if(this!==navigator.geolocation)throw new TypeError('Illegal invocation');if(!arguments.length)throw new TypeError('Missing ID');id=+id>>0;nativeClears++;const watch=watches.get(id);if(watch)for(const timer of watch.timers)clearTimeout(timer);watches.delete(id)}
     }
-    class Geolocation {
-      getCurrentPosition(success, error, options) { nativeCalls++; nativeRequest(success, error, options); }
-      watchPosition(success, error, options) { nativeWatches++; const id = ++nativeId; nativeTimers.set(id, nativeRequest(success, error, options)); return id; }
-      clearWatch(id) { nativeClears++; clearTimeout(nativeTimers.get(id)); nativeTimers.delete(id); }
-    }
-    globalThis.Geolocation = Geolocation;
-    globalThis.navigator = {geolocation: new Geolocation(), permissions: {query: () => Promise.resolve(permission)}};
+    class GeolocationCoordinates{} class GeolocationPosition{}
+    Object.assign(globalThis,{Geolocation,GeolocationCoordinates,GeolocationPosition});
+    globalThis.navigator={geolocation:new Geolocation(),permissions:{query:()=>{throw new Error('Wrapper must use native acquisition')}}};
+    globalThis.emitNativePosition=()=>{for(const [id,watch]of watches)deliver(watch.success,watch.error,id)};
+    globalThis.originalGet=Geolocation.prototype.getCurrentPosition;
   `, context);
-  vm.runInContext(source, context);
-  vm.runInContext(`globalThis.installed = GeoRuntime.installGeolocationRuntime(${JSON.stringify(example.geolocation)})`, context);
-  const run = (code) => vm.runInContext(code, context);
-  async function microtasks() { for (let i = 0; i < 5; i++) await Promise.resolve(); }
+  vm.runInContext(built.outputFiles[0].text, context);
+  vm.runInContext("globalThis.installed=GeoRuntime.installGeolocationRuntime(" + JSON.stringify(profile) + ")", context);
+  const run = code => vm.runInContext(code, context);
   async function flush(advance = 0) {
     clock += advance;
-    for (let i = 0; i < 100; i++) {
-      await microtasks();
-      const due = [...timers].filter(([, item]) => item.due <= clock).sort((a,b) => a[1].due - b[1].due || a[0] - b[0]);
+    for (let turn = 0; turn < 100; turn++) {
+      const due = [...timers].filter(([, value]) => value.due <= clock);
       if (!due.length) return;
-      for (const [id, item] of due) if (timers.delete(id)) item.callback();
+      for (const [id, value] of due) if (timers.delete(id)) value.callback();
+      await Promise.resolve();
     }
-    throw new Error("Unbounded synthetic geolocation tasks");
+    throw Error("Unexpected recurring native fixture jobs");
   }
-  return { run, flush, microtasks, advance: (amount) => { clock += amount; }, pending: () => timers.size,
-    calls: () => JSON.parse(run("JSON.stringify(calls)")), listeners: () => run("permission.listeners.get('change')?.size ?? 0") };
+  return { run, flush, pending: () => timers.size, json: code => JSON.parse(run("JSON.stringify(" + code + ")")), calls: () => JSON.parse(run("JSON.stringify(calls)")) };
 }

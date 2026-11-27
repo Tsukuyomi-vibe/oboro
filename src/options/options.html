@@ -55,18 +55,13 @@
 
       <section class="panel" aria-labelledby="editor-title">
         <h2 id="editor-title" data-i18n="Региональный профиль">Regional profile</h2>
-        <p class="help" data-i18n="Обязательно только название. Пустые поля не подменяются и используют значения текущего браузера на каждом ПК. Для явного неизвестного значения высоты, точности высоты, скорости или направления введите unknown; ноль сохраняется как значение.">Only the name is required. Empty fields are not overridden and use the current browser values on each PC. Enter unknown for an explicitly unknown altitude, altitude accuracy, speed or heading; zero is preserved.</p>
+        <p class="help" data-i18n="Обязательно только название. Пустые поля используют значения текущего браузера на каждом ПК; ноль сохраняется как значение. Из геопараметров меняются только широта и долгота.">Only the name is required. Empty fields use the current browser's values on each PC; zero is preserved. Geolocation overrides change only latitude and longitude.</p>
         <form id="profile-form" novalidate="">
           <fieldset id="profile-fields" class="profile-fields" disabled="">
             <legend class="visually-hidden" data-i18n="Параметры профиля">Profile parameters</legend>
             <label class="full-width" for="profile-name"><span data-i18n="Название *">Name *</span><input id="profile-name" name="name" maxlength="80" required="" autocomplete="off" aria-describedby="profile-error-name"><span class="field-error" id="profile-error-name"></span></label>
             <label for="profile-latitude"><span data-i18n="Широта">Latitude</span><input id="profile-latitude" name="latitude" inputmode="decimal" placeholder="Browser value" aria-describedby="profile-error-latitude" data-i18n-placeholder="Значение браузера"><span class="field-error" id="profile-error-latitude"></span></label>
             <label for="profile-longitude"><span data-i18n="Долгота">Longitude</span><input id="profile-longitude" name="longitude" inputmode="decimal" placeholder="Browser value" aria-describedby="profile-error-longitude" data-i18n-placeholder="Значение браузера"><span class="field-error" id="profile-error-longitude"></span></label>
-            <label for="profile-accuracy"><span data-i18n="Точность, м">Accuracy, m</span><input id="profile-accuracy" name="accuracy" inputmode="decimal" aria-describedby="profile-error-accuracy" placeholder="Browser value" data-i18n-placeholder="Значение браузера"><span class="field-error" id="profile-error-accuracy"></span></label>
-            <label for="profile-altitude"><span data-i18n="Высота, м">Altitude, m</span><input id="profile-altitude" name="altitude" inputmode="decimal" placeholder="Browser value" aria-describedby="profile-error-altitude" data-i18n-placeholder="Значение браузера"><span class="field-error" id="profile-error-altitude"></span></label>
-            <label for="profile-altitudeAccuracy"><span data-i18n="Точность высоты, м">Altitude accuracy, m</span><input id="profile-altitudeAccuracy" name="altitudeAccuracy" inputmode="decimal" placeholder="Browser value" aria-describedby="profile-error-altitudeAccuracy" data-i18n-placeholder="Значение браузера"><span class="field-error" id="profile-error-altitudeAccuracy"></span></label>
-            <label for="profile-speed"><span data-i18n="Скорость, м/с">Speed, m/s</span><input id="profile-speed" name="speed" inputmode="decimal" placeholder="Browser value" aria-describedby="profile-error-speed" data-i18n-placeholder="Значение браузера"><span class="field-error" id="profile-error-speed"></span></label>
-            <label for="profile-heading"><span data-i18n="Направление, 0–359,999°">Heading, 0–359.999°</span><input id="profile-heading" name="heading" inputmode="decimal" placeholder="Browser value" aria-describedby="profile-error-heading" data-i18n-placeholder="Значение браузера"><span class="field-error" id="profile-error-heading"></span></label>
             <label for="profile-timeZone"><span data-i18n="Часовой пояс">Time zone</span><input id="profile-timeZone" name="timeZone" placeholder="Browser value" spellcheck="false" aria-describedby="profile-error-timeZone" data-i18n-placeholder="Значение браузера"><span class="field-error" id="profile-error-timeZone"></span></label>
             <label for="profile-locale"><span data-i18n="Локаль форматов">Formatting locale</span><input id="profile-locale" name="locale" placeholder="Browser value" spellcheck="false" aria-describedby="profile-error-locale" data-i18n-placeholder="Значение браузера"><span class="field-error" id="profile-error-locale"></span></label>
             <label class="full-width" for="profile-languages"><span data-i18n="Языки в порядке предпочтения">Languages in order of preference</span><input id="profile-languages" name="languages" placeholder="Browser value" spellcheck="false" aria-describedby="languages-help profile-error-languages" data-i18n-placeholder="Значение браузера"><span class="field-error" id="profile-error-languages"></span></label>
@@ -136,7 +131,7 @@
         <div id="document-coverage" class="document-coverage" aria-live="polite" data-i18n="Загрузка…">Loading…</div>
         <details><summary data-i18n="Технический отчёт документов и версий">Technical document and revision report</summary><pre id="activation-diagnostics" class="diagnostic-output"></pre></details>
       </section>
-      <footer class="footer"><span data-i18n="Настройки хранятся локально">Settings are stored locally</span><span>oboro · v<span id="version">0.3.2</span></span></footer>
+      <footer class="footer"><span data-i18n="Настройки хранятся локально">Settings are stored locally</span><span>oboro · v<span id="version">0.3.3</span></span></footer>
     </main>
 
 

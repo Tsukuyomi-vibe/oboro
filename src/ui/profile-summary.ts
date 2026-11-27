@@ -28,9 +28,9 @@ export function mountProfileSummary(): void {
       const native = "Значение браузера";
       const rows = [
         ["Языки", profile.languages?.join(", ") ?? native], ["Форматы", profile.locale ?? native], ["Часовой пояс", profile.timeZone ?? native],
-        ...(["latitude", "longitude", "accuracy", "altitude", "altitudeAccuracy", "speed", "heading"] as const).map((key, index) => {
+        ...(["latitude", "longitude"] as const).map((key, index) => {
           const value = profile.geolocation[key];
-          return [["Широта", "Долгота", "Точность", "Высота", "Точность высоты", "Скорость", "Направление"][index]!, value === undefined ? native : value === null ? "Неизвестно" : String(value)];
+          return [["Широта", "Долгота"][index]!, value === undefined ? native : String(value)];
         }),
         ["Карта раскладки", keyboardLayout(profile.keyboardLayout).label]
       ];
@@ -38,7 +38,7 @@ export function mountProfileSummary(): void {
         const term = document.createElement("dt");
         const detail = document.createElement("dd");
         setText(term, label!);
-        if (value === native || value === "Неизвестно" || label === "Карта раскладки") setText(detail, value!);
+        if (value === native || label === "Карта раскладки") setText(detail, value!);
         else setPlainText(detail, value!);
         summary.append(term, detail);
       }

@@ -11,9 +11,11 @@ const compiled = await build({ stdin: { contents: `export * from './src/config/t
 const api = await import(`data:text/javascript;base64,${Buffer.from(compiled.outputFiles[0].text).toString("base64")}`);
 const fixture = JSON.parse(await readFile(new URL("./fixtures/config/v1.json", import.meta.url), "utf8"));
 const partialFixture = JSON.parse(await readFile(new URL("./fixtures/config/v2.json", import.meta.url), "utf8"));
-const legacy = JSON.parse(await readFile(new URL("../examples/berlin.regional-profile.json", import.meta.url), "utf8"));
+const legacy = JSON.parse(await readFile(new URL("./fixtures/profile/v1.json", import.meta.url), "utf8"));
 const clone = value => JSON.parse(JSON.stringify(value));
 const fresh = () => clone(fixture);
+const migratedFixture = clone(fixture); migratedFixture.schemaVersion = 3;
+migratedFixture.config.profile.geolocation = { latitude: 52.52, longitude: 13.405 };
 const ui = () => ({ language: "en", theme: "system" });
 const code = expected => error => error?.code === expected;
 
@@ -47,17 +49,15 @@ function backend(initial = {}) {
   return { data, writes, grants, faults, profiles, sites, service: create(), create, disabled: () => disabled };
 }
 
-test("configuration v1: migration to v2 preserves zero/null, languages, layout, scope and UI", () => {
+test("configuration v1: migration to v3 drops retired values and preserves coordinates, languages, layout, scope and UI", () => {
   const value = api.decodeConfiguration(JSON.stringify(fixture));
   assert.equal(value.kind, "configuration");
-  const migrated = { ...fixture, schemaVersion: 2 };
+  const migrated = migratedFixture;
   assert.deepEqual(value.file, migrated);
   assert.equal(value.sourceSchemaVersion, 1);
   const serialized = api.serializeConfiguration(value.file);
   assert.deepEqual(JSON.parse(serialized), migrated);
-  assert.equal(value.file.config.profile.geolocation.altitude, 0);
-  assert.equal(value.file.config.profile.geolocation.altitudeAccuracy, null);
-  assert.equal(value.file.config.profile.geolocation.heading, 0);
+  assert.deepEqual(value.file.config.profile.geolocation, { latitude: 52.52, longitude: 13.405 });
   assert.equal(value.sourceOboroVersion, "0.3.1");
 });
 
@@ -70,14 +70,14 @@ test("configuration versions: app version is required provenance, newer app/same
     const config = fresh(); config.oboroVersion = version;
     assert.throws(() => api.decodeConfiguration(JSON.stringify(config)), code("INVALID_CONFIG"));
   }
-  const future = fresh(); future.schemaVersion = 3;
+  const future = fresh(); future.schemaVersion = 4;
   assert.throws(() => api.decodeConfiguration(JSON.stringify(future)), code("CONFIG_TOO_NEW"));
 });
 
 test("configuration v2: sparse settings survive preview, restore and re-export without host defaults", async () => {
   const decoded = api.decodeConfiguration(JSON.stringify(partialFixture));
   assert.equal(decoded.sourceSchemaVersion, 2);
-  assert.deepEqual(JSON.parse(api.serializeConfiguration(decoded.file)), partialFixture);
+  assert.deepEqual(JSON.parse(api.serializeConfiguration(decoded.file)), { ...partialFixture, schemaVersion: 3 });
   const b = backend({ regionalProfile: clone(legacy) });
   const preview = await b.service.preview(JSON.stringify(partialFixture), ui());
   assert.deepEqual(preview.proposed.profile, partialFixture.config.profile);
@@ -85,7 +85,7 @@ test("configuration v2: sparse settings survive preview, restore and re-export w
   await b.service.import(preview.id);
   const saved = await b.profiles.load();
   assert.deepEqual(saved.geolocation, { latitude: 52.52 });
-  assert.equal(saved.name, "123"); assert.equal(saved.schemaVersion, 2);
+  assert.equal(saved.name, "123"); assert.equal(saved.schemaVersion, 3);
   for (const field of ["language", "languages", "locale", "timeZone"]) assert.equal(Object.hasOwn(saved, field), false, field);
   assert.deepEqual((await b.service.export(ui())).config.profile, partialFixture.config.profile);
   assert.deepEqual(b.grants, []);
@@ -131,7 +131,7 @@ test("saved export is read-only, always records actual exporter version and omit
   const b = backend({ regionalProfile: clone(legacy), capabilityEvidence: { private: true }, activationState: { enabled: true }, activationSnapshot: { activationId: "private" }, frameRegistry: { secret: true } });
   b.grants.push("<all_urls>");
   const before = clone(b.data), exported = await b.service.export(ui());
-  assert.equal(exported.oboroVersion, "0.3.1"); assert.equal(exported.schemaVersion, 2);
+  assert.equal(exported.oboroVersion, "0.3.1"); assert.equal(exported.schemaVersion, 3);
   assert.deepEqual(exported.permissionHints.origins, ["http://*/*", "https://*/*"]);
   assert.equal(exported.config.profile.name, legacy.name); assert.equal(exported.config.profile.keyboardLayout, "native");
   const text = api.serializeConfiguration(exported);
@@ -145,7 +145,7 @@ test("import preview does not write, disable, grant or replace anything on inval
   const preview = await b.service.preview(JSON.stringify(fixture), ui());
   assert.equal(preview.kind, "configuration"); assert.equal(preview.current.profile, null);
   assert.equal(preview.proposed.profile.name, fixture.config.profile.name);
-  const future = fresh(); future.schemaVersion = 3;
+  const future = fresh(); future.schemaVersion = 4;
   await assert.rejects(b.service.preview(JSON.stringify(future), ui()), code("CONFIG_TOO_NEW"));
   assert.deepEqual(b.data, before); assert.equal(b.writes.length, 0); assert.equal(b.disabled(), 0); assert.deepEqual(b.grants, []);
 });
@@ -160,7 +160,7 @@ test("full restore regenerates local revisions, remains disabled, preserves unre
   assert.deepEqual(b.grants, []); assert.deepEqual(result.missingOrigins, ["https://example.com/*"]);
   assert.equal(b.data.configurationImportJournal, null);
   assert.deepEqual(b.data.configurationUiRestore.ui, fixture.config.ui);
-  assert.deepEqual((await b.service.export(fixture.config.ui)).config, fixture.config);
+  assert.deepEqual((await b.service.export(fixture.config.ui)).config, migratedFixture.config);
   await assert.rejects(b.service.import(preview.id), code("CONFIG_PREVIEW_EXPIRED"));
 });
 
@@ -178,12 +178,12 @@ test("legacy import replaces only profile and never adopts file revision or rese
 });
 
 test("clearing/restoring an empty configuration keeps the profile revision clock monotonic", async () => {
-  const b = backend({ regionalProfile: api.createRegionalProfile(fixture.config.profile, 9) });
+  const b = backend({ regionalProfile: api.createRegionalProfile(migratedFixture.config.profile, 9) });
   const empty = fresh(); empty.config.profile = null;
   const preview = await b.service.preview(JSON.stringify(empty), ui()); await b.service.import(preview.id);
   assert.equal(await b.profiles.load(), null); assert.equal(b.data.regionalProfileRevision, 9);
-  const recreated = await b.profiles.save(fixture.config.profile, 0); assert.equal(recreated.revision, 10);
-  await assert.rejects(b.profiles.save({ ...fixture.config.profile, name: "stale editor" }, 9), error => error.code === "REVISION_CONFLICT");
+  const recreated = await b.profiles.save(migratedFixture.config.profile, 0); assert.equal(recreated.revision, 10);
+  await assert.rejects(b.profiles.save({ ...migratedFixture.config.profile, name: "stale editor" }, 9), error => error.code === "REVISION_CONFLICT");
 });
 
 test("a changed saved configuration or a lost preview prevents overwriting concurrent edits", async () => {
@@ -235,4 +235,29 @@ test("all-granted mode preserves permission hints without selecting/granting the
   const preview = await b.service.preview(JSON.stringify(config), ui()); await b.service.import(preview.id);
   assert.deepEqual(b.grants, []); assert.deepEqual(await b.service.missingAccess(), config.permissionHints.origins);
   assert.deepEqual((await b.service.export(config.config.ui)).permissionHints, config.permissionHints);
+});
+
+test("configuration v3 rejects retired fields; v1/v2 imports discard them and re-export only supported overrides", async () => {
+  const current = JSON.parse(await readFile(new URL("./fixtures/config/v3.json", import.meta.url), "utf8"));
+  assert.deepEqual(api.decodeConfiguration(JSON.stringify(current)).file, current);
+  for (const key of ["accuracy", "altitude", "altitudeAccuracy", "speed", "heading"]) {
+    const invalid = clone(current); invalid.config.profile.geolocation[key] = 0;
+    assert.throws(() => api.decodeConfiguration(JSON.stringify(invalid)), error => error.issues?.[0]?.code === "unknown_field");
+  }
+  for (const schemaVersion of [1, 2]) {
+    const source = fresh(); source.schemaVersion = schemaVersion;
+    const b = backend(), preview = await b.service.preview(JSON.stringify(source), ui());
+    assert.equal(preview.sourceSchemaVersion, schemaVersion);
+    assert.deepEqual(preview.proposed.profile.geolocation, { latitude: 52.52, longitude: 13.405 });
+    await b.service.import(preview.id);
+    const exported = await b.service.export(ui());
+    assert.equal(exported.schemaVersion, 3); assert.deepEqual(exported.config.profile.geolocation, preview.proposed.profile.geolocation);
+    for (const key of ["accuracy", "altitude", "altitudeAccuracy", "speed", "heading"]) assert.equal(api.serializeConfiguration(exported).includes('"' + key + '"'), false);
+  }
+  const retiredOnly = clone(partialFixture);
+  retiredOnly.config.profile.geolocation = { accuracy: 500, altitude: null, altitudeAccuracy: null, speed: 0, heading: null };
+  const b = backend(), preview = await b.service.preview(JSON.stringify(retiredOnly), ui());
+  assert.deepEqual(preview.proposed.profile.geolocation, {});
+  await b.service.import(preview.id);
+  assert.deepEqual((await b.service.export(ui())).config.profile.geolocation, {});
 });

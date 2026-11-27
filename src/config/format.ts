@@ -51,7 +51,7 @@ export function parseUiRestore(value: unknown): UiRestoreRecord | null {
   }
   return Object.freeze({ schemaVersion: 1, token: record.token, ui: parseUiPreferences(record.ui) });
 }
-function readVersion(value: unknown, version: 1 | 2): ConfigurationFile {
+function readVersion(value: unknown, version: 1 | 2 | 3): ConfigurationFile {
   const root = configObject(value, ["format", "schemaVersion", "oboroVersion", "config", "permissionHints"]);
   if (root.format !== CONFIG_FORMAT || root.schemaVersion !== version || typeof root.oboroVersion !== "string" ||
       !/^\d{1,5}(?:\.\d{1,5}){1,3}$/.test(root.oboroVersion) || root.oboroVersion.split(".").some((part) => Number(part) > 65535)) {
@@ -60,7 +60,7 @@ function readVersion(value: unknown, version: 1 | 2): ConfigurationFile {
   const config = configObject(root.config, ["profile", "sitePolicy", "ui"]);
   return Object.freeze({
     format: CONFIG_FORMAT, schemaVersion: CONFIG_SCHEMA_VERSION, oboroVersion: root.oboroVersion,
-    config: Object.freeze({ profile: config.profile === null ? null : version === 1 ? parseLegacyProfileDraft(config.profile) : parseProfileDraft(config.profile), sitePolicy: parseSitePolicyDraft(config.sitePolicy), ui: parseUiPreferences(config.ui) }),
+    config: Object.freeze({ profile: config.profile === null ? null : version < 3 ? parseLegacyProfileDraft(config.profile, version as 1 | 2) : parseProfileDraft(config.profile), sitePolicy: parseSitePolicyDraft(config.sitePolicy), ui: parseUiPreferences(config.ui) }),
     permissionHints: parsePermissionHints(root.permissionHints)
   });
 }
@@ -68,8 +68,9 @@ function readVersion(value: unknown, version: 1 | 2): ConfigurationFile {
 // Published readers are retained. Future schema changes add a pure migration
 // into the current DTO; app-version comparisons never select a schema reader.
 const READERS: Readonly<Record<number, (value: unknown) => ConfigurationFile>> = Object.freeze({
-  1: (value) => readVersion(value, 1), // V1 omitted geo fields mean explicit null.
-  2: (value) => readVersion(value, 2)  // V2 omitted fields remain native on every PC.
+  1: (value) => readVersion(value, 1),
+  2: (value) => readVersion(value, 2),
+  3: (value) => readVersion(value, 3) // Only latitude and longitude can be overridden.
 });
 export function readConfigurationFile(value: unknown): ConfigurationFile {
   if (typeof value !== "object" || value === null || !("format" in value) || value.format !== CONFIG_FORMAT || !("schemaVersion" in value)) {

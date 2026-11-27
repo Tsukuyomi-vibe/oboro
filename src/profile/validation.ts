@@ -5,7 +5,9 @@ import {
 import { isKeyboardLayoutId, type KeyboardLayoutId } from "../keyboard/layouts";
 
 const DRAFT_KEYS = ["name", "geolocation", "languages", "locale", "timeZone", "keyboardLayout"];
-const GEO_KEYS = ["latitude", "longitude", "accuracy", "altitude", "altitudeAccuracy", "speed", "heading"] as const;
+const GEO_KEYS = ["latitude", "longitude"] as const;
+// Published v1/v2 files are validated before projecting into the smaller v3 model.
+const LEGACY_GEO_KEYS = [...GEO_KEYS, "accuracy", "altitude", "altitudeAccuracy", "speed", "heading"] as const;
 const CONTROL_CHARACTERS = /[\u0000-\u001f\u007f]/;
 
 function invalid(path: string, code: string, message: string): never {
@@ -67,18 +69,20 @@ export function normalizeLanguages(value: unknown): readonly string[] {
   return Object.freeze(result);
 }
 
-function geolocation(value: unknown): RegionalGeolocation {
-  const source = object(value, "geolocation");
-  knownKeys(source, GEO_KEYS, "geolocation");
-  return Object.freeze({
-    latitude: finiteNumber(source.latitude, "geolocation.latitude", -90, 90),
-    longitude: finiteNumber(source.longitude, "geolocation.longitude", -180, 180),
-    accuracy: finiteNumber(source.accuracy, "geolocation.accuracy", 0, Number.POSITIVE_INFINITY),
-    altitude: nullableNumber(source.altitude, "geolocation.altitude", Number.NEGATIVE_INFINITY),
-    altitudeAccuracy: nullableNumber(source.altitudeAccuracy, "geolocation.altitudeAccuracy", 0),
-    speed: nullableNumber(source.speed, "geolocation.speed", 0),
-    heading: nullableNumber(source.heading, "geolocation.heading", 0, 360, true)
-  });
+function legacyGeolocation(value: unknown, version: 1 | 2): GeolocationOverrides {
+  const source = version === 2 && value === undefined ? {} : object(value, "geolocation");
+  knownKeys(source, LEGACY_GEO_KEYS, "geolocation");
+  if (version === 1 || source.accuracy !== undefined) finiteNumber(source.accuracy, "geolocation.accuracy", 0, Infinity);
+  nullableNumber(source.altitude, "geolocation.altitude", -Infinity);
+  nullableNumber(source.altitudeAccuracy, "geolocation.altitudeAccuracy", 0);
+  nullableNumber(source.speed, "geolocation.speed", 0);
+  nullableNumber(source.heading, "geolocation.heading", 0, 360, true);
+  const result: Partial<RegionalGeolocation> = {};
+  for (const key of GEO_KEYS) {
+    if (version === 2 && source[key] === undefined) continue;
+    (result as Record<string, number>)[key] = finiteNumber(source[key], "geolocation." + key, key === "latitude" ? -90 : -180, key === "latitude" ? 90 : 180);
+  }
+  return Object.freeze(result);
 }
 
 function locale(value: unknown): string {
@@ -122,11 +126,8 @@ export function parseProfileDraft(value: unknown): ProfileDraft {
   const geo: Partial<RegionalGeolocation> = {};
   for (const key of GEO_KEYS) {
     if (geoSource[key] === undefined) continue;
-    const nullable = !["latitude", "longitude", "accuracy"].includes(key);
-    const bounds = key === "latitude" ? [-90, 90] : key === "longitude" ? [-180, 180]
-      : key === "heading" ? [0, 360] : key === "altitude" ? [-Infinity, Infinity] : [0, Infinity];
-    const parsed = read(() => geoSource[key] === null && nullable ? null : finiteNumber(geoSource[key], "geolocation." + key, bounds[0]!, bounds[1]!, key === "heading"), null);
-    (geo as Record<string, number | null>)[key] = parsed;
+    const parsed = read(() => finiteNumber(geoSource[key], "geolocation." + key, key === "latitude" ? -90 : -180, key === "latitude" ? 90 : 180), 0);
+    (geo as Record<string, number>)[key] = parsed;
   }
   const languages = source.languages === undefined ? undefined : read(() => normalizeLanguages(source.languages), undefined);
   const formats = source.locale === undefined ? undefined : read(() => locale(source.locale), undefined);
@@ -137,15 +138,18 @@ export function parseProfileDraft(value: unknown): ProfileDraft {
     ...(languages === undefined ? {} : { languages }), ...(formats === undefined ? {} : { locale: formats }), ...(zone === undefined ? {} : { timeZone: zone }) });
 }
 
-/** V1 required the regional values; absent nullable coordinates meant unknown. */
-export function parseLegacyProfileDraft(value: unknown): ProfileDraft {
+/** Retired values are checked under their published contract, then discarded. */
+export function parseLegacyProfileDraft(value: unknown, version: 1 | 2 = 1): ProfileDraft {
   const source = object(value, "profile");
   knownKeys(source, DRAFT_KEYS, "profile");
   const name = text(source.name, "name");
   if (name.length > 80) invalid("name", "length", "длина имени не должна превышать 80 символов.");
-  return Object.freeze({
-    name, geolocation: geolocation(source.geolocation), languages: normalizeLanguages(source.languages),
-    locale: locale(source.locale), timeZone: timeZone(source.timeZone), keyboardLayout: parseKeyboardLayout(source.keyboardLayout)
+  return parseProfileDraft({
+    name, geolocation: legacyGeolocation(source.geolocation, version),
+    ...(version === 1 || source.languages !== undefined ? { languages: normalizeLanguages(source.languages) } : {}),
+    ...(version === 1 || source.locale !== undefined ? { locale: locale(source.locale) } : {}),
+    ...(version === 1 || source.timeZone !== undefined ? { timeZone: timeZone(source.timeZone) } : {}),
+    keyboardLayout: parseKeyboardLayout(source.keyboardLayout)
   });
 }
 
@@ -182,13 +186,13 @@ export function createRegionalProfile(draft: unknown, revision: number): Regiona
 export function parseRegionalProfile(value: unknown): RegionalProfile {
   const source = object(value, "profile");
   knownKeys(source, [...DRAFT_KEYS, "schemaVersion", "revision", "language"], "profile");
-  if (source.schemaVersion !== 1 && source.schemaVersion !== PROFILE_SCHEMA_VERSION) invalid("schemaVersion", "unsupported_schema", "версия схемы профиля не поддерживается.");
+  if (source.schemaVersion !== 1 && source.schemaVersion !== 2 && source.schemaVersion !== PROFILE_SCHEMA_VERSION) invalid("schemaVersion", "unsupported_schema", "версия схемы профиля не поддерживается.");
   if (typeof source.revision !== "number" || !Number.isSafeInteger(source.revision) || source.revision < 1) invalid("revision", "revision", "ожидается положительное безопасное целое число.");
   const draft = {
     name: source.name, geolocation: source.geolocation, languages: source.languages,
     locale: source.locale, timeZone: source.timeZone, keyboardLayout: source.keyboardLayout
   };
-  const parsed = createRegionalProfile(source.schemaVersion === 1 ? parseLegacyProfileDraft(draft) : draft, source.revision);
+  const parsed = createRegionalProfile(source.schemaVersion === 1 || source.schemaVersion === 2 ? parseLegacyProfileDraft(draft, source.schemaVersion) : draft, source.revision);
   if (source.language !== parsed.language) invalid("language", "inconsistent_language", "language должен совпадать с первым каноническим элементом languages.");
   return parsed;
 }

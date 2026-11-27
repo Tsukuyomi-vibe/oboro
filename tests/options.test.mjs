@@ -23,27 +23,27 @@ test('I20: новая установка без профиля и грантов
   assert.match(current.query('#profile-description').textContent,/версия: 1/);
 });
 
-test('I20: форма сохраняет все геополя, языки/форматы/зону и карту через версионируемый backend',async t=>{
+test('I20: форма сохраняет координаты, языки/форматы/зону и карту через версионируемый backend',async t=>{
   const current=await page(t,{profile:exampleProfile()});
-  for(const [name,value] of Object.entries({name:'  Москва  ',latitude:'55,7558',longitude:'37.6173',accuracy:'0',altitude:'-5,25',altitudeAccuracy:'0',speed:'0',heading:'0',languages:'RU-ru, ru\n en-US',locale:'ru-ru',timeZone:'Europe/Moscow',keyboardLayout:'ru-jcuken'}))current.set(name,value);
+  for(const [name,value] of Object.entries({name:'  Москва  ',latitude:'55,7558',longitude:'37.6173',languages:'RU-ru, ru\n en-US',locale:'ru-ru',timeZone:'Europe/Moscow',keyboardLayout:'ru-jcuken'}))current.set(name,value);
   assert.equal(current.query('#apply-profile').disabled,true);
   current.click('#save-profile');await current.flush();
   const saved=current.snapshot().regionalProfile;
   assert.equal(saved.revision,2);assert.equal(saved.name,'Москва');
-  assert.deepEqual(saved.geolocation,{latitude:55.7558,longitude:37.6173,accuracy:0,altitude:-5.25,altitudeAccuracy:0,speed:0,heading:0});
+  assert.deepEqual(saved.geolocation,{latitude:55.7558,longitude:37.6173});
   assert.deepEqual(saved.languages,['ru-RU','ru','en-US']);assert.equal(saved.language,'ru-RU');
   assert.equal(saved.locale,'ru-RU');assert.equal(saved.timeZone,'Europe/Moscow');assert.equal(saved.keyboardLayout,'ru-jcuken');
   assert.equal(saves(current)[0].expectedRevision,1);
   assert.equal(current.calls.includes('permission.request'),false);
-  current.set('altitude','');current.set('altitudeAccuracy','');current.set('speed','');current.set('heading','');
+  current.set('latitude','');current.set('longitude','');
   current.click('#save-profile');await current.flush();
   const geo=current.snapshot().regionalProfile.geolocation;
-  for(const field of ['altitude','altitudeAccuracy','speed','heading'])assert.equal(Object.hasOwn(geo,field),false);
+  assert.deepEqual(geo,{});
 });
 
 test('I20: ошибки проверяются до передачи сообщения и отмечаются у соответствующего поля',async t=>{
   const current=await page(t,{profile:exampleProfile()});
-  for(const [name,value] of [['name',''],['latitude','91'],['longitude','-181'],['accuracy','-1'],['altitude','Infinity'],['altitudeAccuracy','-1'],['speed','-1'],['heading','360'],['languages','en-US, EN-us'],['locale','xx-invalid'],['timeZone','+03:00']]){
+  for(const [name,value] of [['name',''],['latitude','91'],['longitude','-181'],['languages','en-US, EN-us'],['locale','xx-invalid'],['timeZone','+03:00']]){
     current.click('#reload-profile');await current.flush();current.set(name,value);current.submit('#profile-form');await current.flush();
     assert.equal(current.query(`[name="${name}"]`).getAttribute('aria-invalid'),'true',name);
     assert.notEqual(current.query(`#profile-error-${name}`).textContent,'',name);

@@ -1,4 +1,4 @@
-# Oboro Check — 0.3.2
+# Oboro Check — 0.3.3
 
 **English** | [Русский](probe-package-readme.md)
 
@@ -11,7 +11,7 @@ The diagnostic extension defaults to English. Use **Language → Русский*
 3. Load **dist-probe** as an unpacked extension in chrome://extensions. Open diagnostics from its icon and import the baseline JSON collected without this build.
 4. Check API availability with Chrome's user-script toggle off and on, recording each observed state. Reload the diagnostic page after changing the toggle. Prepare baseline, open all four links and collect the report. Arm the probe before navigating to all armed links, then collect again.
 5. Remove the probe, open all four off links and collect again. Confirm registrations and rules were cleaned up. Export the full JSON; CONFIRMED requires complete evidence for the same exact Chrome build, including the native baseline and toggle checks.
-6. Disable the diagnostic extension after cleanup. Import the full report into the main oboro 0.3.2 extension. It independently validates the report, exact Chrome version and current API availability.
+6. Disable the diagnostic extension after cleanup. Import the full report into the main oboro 0.3.3 extension. It independently validates the report, exact Chrome version and current API availability.
 
 System, Light and Dark themes are available in diagnostics and on the local fixture. Theme preferences are saved per origin. This fixture tests SPA navigation, BFCache, new tabs, early iframe/srcdoc/blob contexts and workers. BFCache requires an actual pageshow.persisted=true observation. Workers and opaque contexts have no baseline API overrides.
 

@@ -35,7 +35,7 @@ test("configuration UI exports a real JSON download with manifest version, saved
   assert.equal(captured.length, 1); assert.equal(captured[0].name, "oboro-config-" + ui.window.chrome.runtime.getManifest().version + ".json");
   assert.equal(captured[0].blob.type, "application/json");
   const file = JSON.parse(await blobText(ui, captured[0].blob));
-  assert.equal(file.oboroVersion, ui.window.chrome.runtime.getManifest().version); assert.equal(file.schemaVersion, 2);
+  assert.equal(file.oboroVersion, ui.window.chrome.runtime.getManifest().version); assert.equal(file.schemaVersion, 3);
   assert.equal(file.config.profile.name, exampleProfile().name); assert.equal(file.config.ui.language, "en"); assert.equal(file.config.ui.theme, "dark");
   assert.equal("revision" in file.config.profile, false); assert.deepEqual(ui.snapshot(), before);
   assert.equal(ui.query('[name="name"]').value, "unsaved draft"); assert.equal(ui.calls.includes("permission.request"), false);
@@ -46,6 +46,7 @@ test("configuration UI previews exact changes safely and cancel preserves saved 
   const ui = optionsPage({ profile: exampleProfile(), language: null }); t.after(ui.close); await ui.flush();
   const config = copy(fixture); config.config.profile.name = '<img src=x onerror=alert(1)>';
   const before = ui.snapshot(); await selectFile(ui, config);
+  assert.match(ui.query("#config-preview-hints").textContent, /Only latitude and longitude are imported/);
   assert.equal(ui.query("#config-preview").hidden, false); assert.equal(ui.query("#import-config-confirm").disabled, false);
   assert.match(ui.query("#config-source").textContent, /File from oboro 0.3.1, format 1/);
   assert.ok(ui.query("#config-change-rows").textContent.includes(config.config.profile.name));
@@ -66,7 +67,7 @@ test("sparse JSON import clears old overrides, shows native values and applies w
   ui.click("#import-config-confirm"); await ui.flush();
   assert.deepEqual(ui.snapshot().regionalProfile.geolocation, { latitude: 52.52 });
   assert.equal(ui.snapshot().activationState.enabled, false);
-  for (const name of ["longitude", "accuracy", "altitude", "altitudeAccuracy", "speed", "heading", "languages", "locale", "timeZone"]) {
+  for (const name of ["longitude", "languages", "locale", "timeZone"]) {
     assert.equal(ui.query(`#profile-form [name="${name}"]`).value, "", name);
   }
   ui.set("name", "123 renamed"); ui.click("#save-profile"); await ui.flush();
@@ -79,11 +80,24 @@ test("sparse JSON import clears old overrides, shows native values and applies w
   assert.equal(ui.calls.includes("permission.request"), false);
 });
 
+test("v2 with only retired geo settings imports a native profile and never recreates their controls", async t => {
+  const ui = optionsPage({ origins: ["https://example.com/*"], proof: true, language: null }); t.after(ui.close); await ui.flush();
+  const old = copy(partialFixture); old.config.profile.geolocation = { accuracy: 25, altitude: 0, altitudeAccuracy: null, speed: 0, heading: null };
+  await selectFile(ui, old);
+  assert.match(ui.query("#config-preview-hints").textContent, /other geolocation settings have been removed/);
+  ui.click("#import-config-confirm"); await ui.flush();
+  assert.deepEqual(ui.snapshot().regionalProfile.geolocation, {});
+  ui.click("#apply-profile"); await ui.flush();
+  assert.equal(ui.snapshot().activationState.status, "READY"); assert.equal(ui.installed().rules.length, 0);
+  for (const field of ["accuracy", "altitude", "altitudeAccuracy", "speed", "heading"]) assert.equal(ui.query(`[name="${field}"]`), null);
+});
+
 test("configuration UI restores all settings, stays OFF, persists language/theme and grants only on an explicit click", async t => {
   const ui = optionsPage({ language: null }); t.after(ui.close); await ui.flush();
   await selectFile(ui, fixture); ui.click("#import-config-confirm"); await ui.flush();
   const saved = ui.snapshot();
-  assert.equal(saved.regionalProfile.name, fixture.config.profile.name); assert.equal(saved.regionalProfile.geolocation.altitude, 0);
+  for (const field of ["accuracy", "altitude", "altitudeAccuracy", "speed", "heading"]) { assert.equal(ui.query(`[name="${field}"]`), null); assert.equal(Object.hasOwn(saved.regionalProfile.geolocation, field), false); }
+  assert.equal(saved.regionalProfile.name, fixture.config.profile.name); assert.deepEqual(saved.regionalProfile.geolocation, { latitude: 52.52, longitude: 13.405 });
   assert.deepEqual(saved.sitePolicy.include, fixture.config.sitePolicy.include);
   assert.equal(saved.activationState.enabled, false); assert.equal(saved.extensionPreferences.masterEnabled, false);
   assert.deepEqual(ui.installed(), { main: [], bridge: [], rules: [] }); assert.equal(ui.calls.includes("permission.request"), false);
@@ -164,7 +178,7 @@ test("dirty profile/mode drafts block replacement and remain in their forms", as
 
 test("invalid/future files and conflicting previews never overwrite settings", async t => {
   const ui = optionsPage({ profile: exampleProfile(), language: null }); t.after(ui.close); await ui.flush();
-  const before = ui.snapshot(); const future = copy(fixture); future.schemaVersion = 3;
+  const before = ui.snapshot(); const future = copy(fixture); future.schemaVersion = 4;
   await selectFile(ui, future); assert.match(ui.query("#config-feedback").textContent, /newer configuration format/);
   assert.equal(ui.query("#config-preview").hidden, true); assert.deepEqual(ui.snapshot(), before);
   await selectFile(ui, "{invalid"); assert.match(ui.query("#config-feedback").textContent, /Could not read/); assert.deepEqual(ui.snapshot(), before);

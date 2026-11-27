@@ -14,9 +14,9 @@ const localized = (value: string): Cell => ({ value, localized: true });
 function configurationRows(config: SavedConfiguration): Row[] {
   const profile = config.profile;
   const rows: Row[] = [{ label: "Название профиля", cell: profile ? plain(profile.name) : localized("Сохранённого профиля нет.") }];
-  for (const name of ["latitude", "longitude", "accuracy", "altitude", "altitudeAccuracy", "speed", "heading"] as const) {
+  for (const name of ["latitude", "longitude"] as const) {
     const value = profile?.geolocation[name];
-    rows.push({ label: PROFILE_FIELD_LABELS[name], cell: value === null ? localized("Неизвестно") : value === undefined ? localized("Значение браузера") : plain(String(value)) });
+    rows.push({ label: PROFILE_FIELD_LABELS[name], cell: value === undefined ? localized("Значение браузера") : plain(String(value)) });
   }
   rows.push(
     { label: "Языки", cell: profile?.languages ? plain(profile.languages.join(", ")) : localized("Значение браузера") },
@@ -77,7 +77,12 @@ export function mountConfigurationTransfer(): void {
     unchanged.hidden = count !== 0;
     allGrantedNote.hidden = value.proposed.sitePolicy.mode !== "all_granted_sites";
     for (const origin of value.permissionHints.origins) { const item = document.createElement("li"); setPlainText(item, origin); hints.append(item); }
-    hints.hidden = value.permissionHints.origins.length === 0;
+    const legacy = value.sourceSchemaVersion < 3 && value.proposed.profile !== null;
+    if (legacy) {
+      const item = document.createElement("li");
+      setText(item, "Файл старого формата. Из геопараметров импортируются только широта и долгота; остальные настройки геолокации удалены."); hints.append(item);
+    }
+    hints.hidden = value.permissionHints.origins.length === 0 && !legacy;
     update();
   };
   const refreshAccess = async (): Promise<void> => {

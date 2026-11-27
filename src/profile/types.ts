@@ -1,4 +1,4 @@
-export const PROFILE_SCHEMA_VERSION = 2 as const;
+export const PROFILE_SCHEMA_VERSION = 3 as const;
 export const PROFILE_STORAGE_KEY = "regionalProfile";
 export const PROFILE_REVISION_KEY = "regionalProfileRevision";
 export const MAX_PROFILE_LANGUAGES = 10;
@@ -6,13 +6,8 @@ export const MAX_PROFILE_LANGUAGES = 10;
 export interface RegionalGeolocation {
   readonly latitude: number;
   readonly longitude: number;
-  readonly accuracy: number;
-  readonly altitude: number | null;
-  readonly altitudeAccuracy: number | null;
-  readonly speed: number | null;
-  readonly heading: number | null;
 }
-/** Missing keys inherit each browser reading; null intentionally means unknown. */
+/** Missing coordinates inherit each browser reading. */
 export type GeolocationOverrides = Readonly<Partial<RegionalGeolocation>>;
 
 /** A normalized draft has no caller-controlled revision or derived language. */

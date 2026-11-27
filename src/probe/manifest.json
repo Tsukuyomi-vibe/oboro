@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "oboro — diagnostics",
-  "version": "0.3.2",
+  "version": "0.3.3",
   "description": "Separate diagnostic build: checks early injection and network rules on a local fixture only.",
   "minimum_chrome_version": "120",
   "permissions": ["storage", "userScripts", "declarativeNetRequestWithHostAccess"],

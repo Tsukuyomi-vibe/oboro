@@ -69,10 +69,10 @@ function connectClient(repository, sender = trustedUi) {
 
 test("I03: пример профиля и согласованный неизменяемый снимок", () => {
   const profile = getExampleProfile();
-  assert.equal(profile.schemaVersion, 2);
+  assert.equal(profile.schemaVersion, 3);
   assert.equal(profile.revision, 1);
   assert.equal(profile.language, profile.languages[0]);
-  assert.deepEqual(profile.geolocation, { latitude: 52.52, longitude: 13.405, accuracy: 1000, altitude: null, altitudeAccuracy: null, speed: null, heading: null });
+  assert.deepEqual(profile.geolocation, { latitude: 52.52, longitude: 13.405 });
   assert.ok(Object.isFrozen(profile));
   assert.ok(Object.isFrozen(profile.languages));
   assert.ok(Object.isFrozen(profile.geolocation));
@@ -90,29 +90,29 @@ test("I03: пример профиля и согласованный неизм�
 
 test("I03: границы координат и сохранение отсутствующих геополей без подмены", () => {
   const draft = freshDraft();
-  draft.geolocation = { latitude: -90, longitude: 180, accuracy: 0 };
+  draft.geolocation = { latitude: -90, longitude: 180 };
   const normalized = parseProfileDraft(draft);
-  assert.deepEqual(normalized.geolocation, { latitude: -90, longitude: 180, accuracy: 0 });
+  assert.deepEqual(normalized.geolocation, { latitude: -90, longitude: 180 });
   const opposite = freshDraft();
-  opposite.geolocation = { latitude: 90, longitude: -180, accuracy: 0.5, altitude: -430.25, altitudeAccuracy: 0, speed: 0, heading: 359.999 };
+  opposite.geolocation = { latitude: 90, longitude: -180 };
   assert.deepEqual(parseProfileDraft(opposite).geolocation, opposite.geolocation);
-  draft.geolocation = { latitude: -0, longitude: -0, accuracy: -0 };
+  draft.geolocation = { latitude: -0, longitude: -0 };
   assert.ok(Object.is(parseProfileDraft(draft).geolocation.latitude, 0));
 });
 
 test("I03: нечисловые, бесконечные и выходящие за диапазон геозначения отвергаются", () => {
-  for (const field of ["latitude", "longitude", "accuracy", "altitude", "altitudeAccuracy", "speed", "heading"]) {
+  for (const field of ["latitude", "longitude"]) {
     for (const value of [NaN, Infinity, -Infinity, "0", true, {}, []]) {
       const draft = freshDraft();
       draft.geolocation[field] = value;
       assert.throws(() => parseProfileDraft(draft), (error) => error instanceof ProfileValidationError && error.issues[0].path === `geolocation.${field}`, `${field}=${String(value)}`);
     }
   }
-  for (const [field, value] of [["latitude", -90.01], ["latitude", 90.01], ["longitude", -180.01], ["longitude", 180.01], ["accuracy", -1], ["altitudeAccuracy", -1], ["speed", -1], ["heading", -1], ["heading", 360]]) {
+  for (const [field, value] of [["latitude", -90.01], ["latitude", 90.01], ["longitude", -180.01], ["longitude", 180.01]]) {
     const draft = freshDraft(); draft.geolocation[field] = value;
     assert.throws(() => parseProfileDraft(draft), ProfileValidationError);
   }
-  for (const field of ["latitude", "longitude", "accuracy"]) {
+  for (const field of ["latitude", "longitude"]) {
     const draft = freshDraft(); draft.geolocation[field] = null;
     assert.throws(() => parseProfileDraft(draft), ProfileValidationError);
     delete draft.geolocation[field];
@@ -168,7 +168,7 @@ test("I03: схема, revision и derived language проверяются пр�
   for (const revision of [0, -1, 1.5, NaN, Infinity, Number.MAX_SAFE_INTEGER + 1, "1", null]) {
     assert.throws(() => parseRegionalProfile({ ...clone(getExampleProfile()), revision }), ProfileValidationError);
   }
-  for (const schemaVersion of [0, 3, "1", null]) {
+  for (const schemaVersion of [0, 4, "1", null]) {
     assert.throws(() => parseRegionalProfile({ ...clone(getExampleProfile()), schemaVersion }), (error) => error.issues[0].code === "unsupported_schema");
   }
   assert.throws(() => parseRegionalProfile({ ...clone(getExampleProfile()), language: "en-US" }), (error) => error.issues[0].code === "inconsistent_language");
@@ -215,7 +215,7 @@ test("I03: повторное сохранение того же содержи�
 test("I03: проверка данных идёт до чтения/записи; очередь получает независимый снимок", async () => {
   const storage = jsonStorage();
   const repository = new ProfileRepository(storage);
-  const invalid = freshDraft(); invalid.geolocation.speed = NaN;
+  const invalid = freshDraft(); invalid.geolocation.latitude = NaN;
   await assert.rejects(repository.save(invalid, 0), ProfileValidationError);
   await assert.rejects(repository.save(freshDraft(), "0"), ProfileValidationError);
   assert.equal(storage.state.reads, 0);
@@ -322,7 +322,7 @@ test("I03: клиент ↔ handler ↔ JSON-хранилище, включая 
 test("I03: NaN и Infinity проверяются клиентом до JSON-сериализации Chrome", async () => {
   const storage = jsonStorage();
   const client = connectClient(new ProfileRepository(storage));
-  for (const field of ["altitude", "altitudeAccuracy", "heading", "speed"]) {
+  for (const field of ["latitude", "longitude"]) {
     for (const value of [NaN, Infinity, -Infinity]) {
       const draft = freshDraft(); draft.geolocation[field] = value;
       await assert.rejects(saveProfile(draft, 0), ProfileValidationError);
@@ -370,4 +370,20 @@ test("I03: фактический bundle service worker подключает о�
   await new Promise(setImmediate);
   assert.equal(PROFILE_STORAGE_KEY in storage.snapshot(), false);
   assert.equal(storage.snapshot().extensionPreferences.masterEnabled, false);
+});
+
+test("profile v1/v2 migration removes retired settings and preserves coordinates, revisions and unrelated values", async () => {
+  for (const schemaVersion of [1, 2]) {
+    const raw = { ...clone(getExampleProfile()), schemaVersion, geolocation: { latitude: 0, longitude: 180, accuracy: 0, altitude: 0, altitudeAccuracy: null, speed: 0, heading: 20 } };
+    const parsed = parseRegionalProfile(raw);
+    assert.equal(parsed.schemaVersion, 3); assert.deepEqual(parsed.geolocation, { latitude: 0, longitude: 180 });
+    const storage = jsonStorage({ regionalProfile: raw, unrelated: "keep" }), repository = new ProfileRepository(storage);
+    assert.deepEqual((await repository.load()).geolocation, parsed.geolocation); assert.equal(storage.state.writes, 0);
+    await repository.save({ ...profileToDraft(parsed), name: "Migrated" }, raw.revision);
+    assert.equal(storage.snapshot().regionalProfile.schemaVersion, 3);
+    assert.deepEqual(storage.snapshot().regionalProfile.geolocation, parsed.geolocation); assert.equal(storage.snapshot().unrelated, "keep");
+  }
+  for (const key of ["accuracy", "altitude", "altitudeAccuracy", "speed", "heading"]) {
+    for (const value of [0, null, undefined]) assert.throws(() => parseProfileDraft({ name: "123", geolocation: { [key]: value } }), error => error.issues[0].code === "unknown_field");
+  }
 });

@@ -2,7 +2,7 @@ import type { ProfileDraft } from "../profile/types";
 import type { SitePolicyDraft } from "../sites/policy";
 
 export const CONFIG_FORMAT = "oboro-config";
-export const CONFIG_SCHEMA_VERSION = 2 as const;
+export const CONFIG_SCHEMA_VERSION = 3 as const;
 export const MAX_CONFIG_BYTES = 1_048_576;
 export const CONFIG_UI_RESTORE_KEY = "configurationUiRestore";
 export const CONFIG_PERMISSION_HINTS_KEY = "configurationPermissionHints";

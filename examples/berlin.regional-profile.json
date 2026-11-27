@@ -1,18 +1,18 @@
 {
-  "schemaVersion": 1,
+  "schemaVersion": 3,
   "revision": 1,
   "name": "Берлин",
   "geolocation": {
     "latitude": 52.52,
-    "longitude": 13.405,
-    "accuracy": 1000,
-    "altitude": null,
-    "altitudeAccuracy": null,
-    "speed": null,
-    "heading": null
+    "longitude": 13.405
   },
-  "languages": ["de-DE", "de", "en-US"],
+  "languages": [
+    "de-DE",
+    "de",
+    "en-US"
+  ],
   "locale": "de-DE",
   "timeZone": "Europe/Berlin",
-  "language": "de-DE"
+  "language": "de-DE",
+  "keyboardLayout": "native"
 }
