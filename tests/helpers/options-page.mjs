@@ -10,6 +10,7 @@ const root=fileURLToPath(new URL('../../',import.meta.url));
 const runtime=await runtimeBundle(root);
 const bundles=await Promise.all(['src/options/options.ts','src/background/service-worker.ts'].map(entry=>build({entryPoints:[entry],absWorkingDir:root,bundle:true,write:false,format:'iife',platform:'browser',define:{__REGION_RUNTIME_BUNDLE__:JSON.stringify(runtime)},logLevel:'silent'})));
 const html=await readFile(new URL('../../src/options/options.html',import.meta.url),'utf8');
+const extensionManifest=JSON.parse(await readFile(new URL('../../src/manifest.json',import.meta.url),'utf8'));
 const example=JSON.parse(await readFile(new URL('../../examples/berlin.regional-profile.json',import.meta.url),'utf8'));
 const languageScript=await readFile(new URL('../../src/ui/language.js',import.meta.url),'utf8');
 const themeScript=await readFile(new URL('../../src/ui/theme.js',import.meta.url),'utf8');
@@ -72,7 +73,7 @@ export function optionsPage({profile=null,policy,origins=[],proof=false,ack=true
   };
   const contains=async({origins:requested})=>requested.every(origin=>grants.includes(origin)||grants.includes('https://*/*')&&origin.startsWith('https:'));
   const baseChrome={
-    runtime:{id:extensionId,getManifest:()=>({version:'0.1.0'}),onMessage:runtimeMessages,onInstalled:event(),onStartup:event()},
+    runtime:{id:extensionId,getManifest:()=>({version:extensionManifest.version}),onMessage:runtimeMessages,onInstalled:event(),onStartup:event()},
     storage:{local:storage(data,'local'),session:storage(session,'session'),onChanged:workerChanges},
     permissions:{getAll:async()=>workerCopy({origins:grants}),contains,onAdded:workerAdded,onRemoved:workerRemoved},
     tabs:{query:async()=>workerCopy([{id:7,url:'https://example.com/',status:'complete'}]),reload,onRemoved:removed,sendMessage:async()=>({})},

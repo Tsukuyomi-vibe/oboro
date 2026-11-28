@@ -51,6 +51,12 @@ export function parseUiRestore(value: unknown): UiRestoreRecord | null {
   }
   return Object.freeze({ schemaVersion: 1, token: record.token, ui: parseUiPreferences(record.ui) });
 }
+const MAX_READABLE_CONFIG_SCHEMA_VERSION = 3;
+function hasRetiredGeolocationSettings(value: unknown): boolean {
+  if (typeof value !== "object" || value === null || !("geolocation" in value)) return false;
+  const geo = value.geolocation;
+  return typeof geo === "object" && geo !== null && ["accuracy", "altitude", "altitudeAccuracy", "speed", "heading"].some((key) => Object.hasOwn(geo, key));
+}
 function readVersion(value: unknown, version: 1 | 2 | 3): ConfigurationFile {
   const root = configObject(value, ["format", "schemaVersion", "oboroVersion", "config", "permissionHints"]);
   if (root.format !== CONFIG_FORMAT || root.schemaVersion !== version || typeof root.oboroVersion !== "string" ||
@@ -58,9 +64,13 @@ function readVersion(value: unknown, version: 1 | 2 | 3): ConfigurationFile {
     throw new ConfigurationError("INVALID_CONFIG", "В конфигурации отсутствует корректная версия oboro.");
   }
   const config = configObject(root.config, ["profile", "sitePolicy", "ui"]);
+  // The user restarted portable numbering at v1 in oboro 0.0.1. Preserve
+  // imports of the old full v1 shape without making its retired fields valid
+  // in a new 0.0.1 file. Supported sparse fields never depend on app version.
+  const legacyVersion = version === 2 ? 2 : version === 1 && root.oboroVersion !== "0.0.1" && hasRetiredGeolocationSettings(config.profile) ? 1 : null;
   return Object.freeze({
     format: CONFIG_FORMAT, schemaVersion: CONFIG_SCHEMA_VERSION, oboroVersion: root.oboroVersion,
-    config: Object.freeze({ profile: config.profile === null ? null : version < 3 ? parseLegacyProfileDraft(config.profile, version as 1 | 2) : parseProfileDraft(config.profile), sitePolicy: parseSitePolicyDraft(config.sitePolicy), ui: parseUiPreferences(config.ui) }),
+    config: Object.freeze({ profile: config.profile === null ? null : legacyVersion === null ? parseProfileDraft(config.profile) : parseLegacyProfileDraft(config.profile, legacyVersion), sitePolicy: parseSitePolicyDraft(config.sitePolicy), ui: parseUiPreferences(config.ui) }),
     permissionHints: parsePermissionHints(root.permissionHints)
   });
 }
@@ -78,7 +88,7 @@ export function readConfigurationFile(value: unknown): ConfigurationFile {
   }
   const version = value.schemaVersion;
   if (typeof version !== "number" || !Number.isSafeInteger(version) || version < 1) throw new ConfigurationError("INVALID_CONFIG", "Некорректная версия формата конфигурации.");
-  if (version > CONFIG_SCHEMA_VERSION) throw new ConfigurationError("CONFIG_TOO_NEW", "Файл использует более новый формат конфигурации. Обновите oboro; настройки не изменены.");
+  if (version > MAX_READABLE_CONFIG_SCHEMA_VERSION) throw new ConfigurationError("CONFIG_TOO_NEW", "Файл использует более новый формат конфигурации. Обновите oboro; настройки не изменены.");
   const reader = READERS[version];
   if (!reader) throw new ConfigurationError("UNSUPPORTED_CONFIG", "Версия формата конфигурации не поддерживается.");
   return reader(value);
@@ -90,13 +100,14 @@ export function decodeConfiguration(text: unknown): DecodedConfiguration {
   if (typeof value === "object" && value !== null && "format" in value) {
     const file = readConfigurationFile(value);
     const sourceSchemaVersion = "schemaVersion" in value && typeof value.schemaVersion === "number" ? value.schemaVersion : file.schemaVersion;
-    return Object.freeze({ kind: "configuration", sourceOboroVersion: file.oboroVersion, sourceSchemaVersion, file });
+    const profile = "config" in value && typeof value.config === "object" && value.config !== null && "profile" in value.config ? value.config.profile : null;
+    return Object.freeze({ kind: "configuration", sourceOboroVersion: file.oboroVersion, sourceSchemaVersion, discardedGeolocationSettings: hasRetiredGeolocationSettings(profile), file });
   }
   // Standalone profile files never recorded an app version. Do not invent one
   // or overwrite unrelated settings when adapting that narrower format.
   const profile = parseRegionalProfile(value);
   const sourceSchemaVersion = typeof value === "object" && value !== null && "schemaVersion" in value && typeof value.schemaVersion === "number" ? value.schemaVersion : profile.schemaVersion;
-  return Object.freeze({ kind: "profile", sourceOboroVersion: null, sourceSchemaVersion, profile: profileToDraft(profile) });
+  return Object.freeze({ kind: "profile", sourceOboroVersion: null, sourceSchemaVersion, discardedGeolocationSettings: hasRetiredGeolocationSettings(value), profile: profileToDraft(profile) });
 }
 export function serializeConfiguration(value: unknown): string {
   const text = JSON.stringify(readConfigurationFile(value), null, 2) + "\n";

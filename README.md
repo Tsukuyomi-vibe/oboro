@@ -4,7 +4,7 @@
 
 A Chrome Manifest V3 extension that applies a regional profile to sites you select. Configure browser languages, geolocation, formatting locale, time zone and keyboard layout map in one place.
 
-Version: **0.3.3**. The interface defaults to English; Russian remains available. Both language and theme choices are saved locally.
+Version: **0.0.1**. The interface defaults to English; Russian remains available. Both language and theme choices are saved locally.
 
 **Native Chrome Stable/Beta acceptance is still incomplete.** Activation requires a complete, successful Oboro Check report for your exact Chrome version. Building the extension or passing automated tests does not satisfy this requirement.
 
@@ -75,14 +75,14 @@ To restore settings:
 
 | File | What is restored |
 | --- | --- |
-| Full `oboro-config` configuration, schema v1, v2 or v3 | Saved profile, site selection mode and rules, interface language/theme, and permission hints |
+| Full `oboro-config` configuration: current v1 and historical v1/v2/v3 | Saved profile, site selection mode and rules, interface language/theme, and permission hints |
 | Standalone regional-profile v1, v2 or v3 | Profile only; sites, language/theme and permission hints are preserved. The source app version is shown as unknown. |
 
 Importing retains existing Chrome permissions and does not grant access automatically. **All sites with granted access** uses the receiving browser's current grants, which can include sites outside the file. Compatibility reports are not transferred; the existing check for your exact Chrome version still applies.
 
-The current format is `schemaVersion: 3`; each new export also records `oboroVersion` from the extension manifest. Only explicitly chosen overrides are exported. Importing a latitude-only profile on another PC keeps that PC's native longitude, languages, formatting locale, time zone and keyboard map. V1/v2 files remain importable: their retired accuracy, altitude, altitude accuracy, speed and heading settings are discarded with an import-preview notice. Those five values always come from the native browser response. A newer exporter using a supported schema is accepted; future schemas or invalid fields are rejected before changes. Conflicting edits require a fresh preview; failed or interrupted writes use rollback data, and unresolved recovery blocks further changes. Files must be UTF-8 JSON, at most **1 MiB**.
+Portable numbering restarts at v1 in oboro 0.0.1 while retaining the current functionality. The current format is `schemaVersion: 1`; each new export also records `oboroVersion` from the extension manifest. Only explicitly chosen overrides are exported. Importing a latitude-only profile on another PC keeps that PC's native longitude, languages, formatting locale, time zone and keyboard map. Historical full v1 and v2/v3 files remain importable: their retired accuracy, altitude, altitude accuracy, speed and heading settings are discarded with an import-preview notice. Those five values always come from the native browser response. A newer exporter using a supported schema is accepted; future schemas or invalid fields are rejected before changes. Conflicting edits require a fresh preview; failed or interrupted writes use rollback data, and unresolved recovery blocks further changes. Files must be UTF-8 JSON, at most **1 MiB**.
 
-**Keep configuration files private:** they contain your profile name, chosen coordinates and site lists. Downloads matching `oboro-config-*.json` are excluded by [.gitignore](.gitignore). Runtime activation state, local revision counters, compatibility reports, document IDs and machine/account metadata are omitted. See the [format contract](docs/configuration-format.md) and [v3 JSON Schema](schemas/oboro-config.v3.schema.json) for details.
+**Keep configuration files private:** they contain your profile name, chosen coordinates and site lists. Downloads matching `oboro-config-*.json` are excluded by [.gitignore](.gitignore). Runtime activation state, local revision counters, compatibility reports, document IDs and machine/account metadata are omitted. See the [format contract](docs/configuration-format.md) and [v1 JSON Schema](schemas/oboro-config.v1.schema.json) for details.
 
 ## Interface language and theme
 
@@ -140,6 +140,6 @@ The [.gitignore](.gitignore) excludes dependencies, builds, archives, logs, brow
 - [Russian README](README.ru.md)
 - [Main package installation guide](docs/core-package-readme.en.md)
 - [Diagnostic package guide](docs/probe-package-readme.en.md)
-- [Configuration format and compatibility](docs/configuration-format.md), [JSON Schema v3](schemas/oboro-config.v3.schema.json), [retained v2 schema](schemas/oboro-config.v2.schema.json), [retained v1 schema](schemas/oboro-config.v1.schema.json)
-- [Full data reference](info.md), [privacy](docs/privacy.md), [release notes](docs/releases/0.3.3.md) — Russian
+- [Configuration format and compatibility](docs/configuration-format.md), [JSON Schema v1](schemas/oboro-config.v1.schema.json), [previous v3](schemas/oboro-config.v3.schema.json), [retained v2 schema](schemas/oboro-config.v2.schema.json), [original v1 schema](schemas/legacy/oboro-config.v1.schema.json)
+- [Full data reference](info.md), [privacy](docs/privacy.md), [release notes](docs/releases/0.0.1.md) — Russian
 - [Native acceptance matrix](docs/core-acceptance-matrix.json) and [implementation status](docs/i21-i23-validation-status.json)

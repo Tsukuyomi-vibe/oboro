@@ -14,7 +14,7 @@ const partialFixture = JSON.parse(await readFile(new URL("./fixtures/config/v2.j
 const legacy = JSON.parse(await readFile(new URL("./fixtures/profile/v1.json", import.meta.url), "utf8"));
 const clone = value => JSON.parse(JSON.stringify(value));
 const fresh = () => clone(fixture);
-const migratedFixture = clone(fixture); migratedFixture.schemaVersion = 3;
+const migratedFixture = clone(fixture); migratedFixture.schemaVersion = 1;
 migratedFixture.config.profile.geolocation = { latitude: 52.52, longitude: 13.405 };
 const ui = () => ({ language: "en", theme: "system" });
 const code = expected => error => error?.code === expected;
@@ -49,7 +49,7 @@ function backend(initial = {}) {
   return { data, writes, grants, faults, profiles, sites, service: create(), create, disabled: () => disabled };
 }
 
-test("configuration v1: migration to v3 drops retired values and preserves coordinates, languages, layout, scope and UI", () => {
+test("original full v1 migrates to current v1, dropping retired values and preserving supported settings", () => {
   const value = api.decodeConfiguration(JSON.stringify(fixture));
   assert.equal(value.kind, "configuration");
   const migrated = migratedFixture;
@@ -77,7 +77,7 @@ test("configuration versions: app version is required provenance, newer app/same
 test("configuration v2: sparse settings survive preview, restore and re-export without host defaults", async () => {
   const decoded = api.decodeConfiguration(JSON.stringify(partialFixture));
   assert.equal(decoded.sourceSchemaVersion, 2);
-  assert.deepEqual(JSON.parse(api.serializeConfiguration(decoded.file)), { ...partialFixture, schemaVersion: 3 });
+  assert.deepEqual(JSON.parse(api.serializeConfiguration(decoded.file)), { ...partialFixture, schemaVersion: 1 });
   const b = backend({ regionalProfile: clone(legacy) });
   const preview = await b.service.preview(JSON.stringify(partialFixture), ui());
   assert.deepEqual(preview.proposed.profile, partialFixture.config.profile);
@@ -131,7 +131,7 @@ test("saved export is read-only, always records actual exporter version and omit
   const b = backend({ regionalProfile: clone(legacy), capabilityEvidence: { private: true }, activationState: { enabled: true }, activationSnapshot: { activationId: "private" }, frameRegistry: { secret: true } });
   b.grants.push("<all_urls>");
   const before = clone(b.data), exported = await b.service.export(ui());
-  assert.equal(exported.oboroVersion, "0.3.1"); assert.equal(exported.schemaVersion, 3);
+  assert.equal(exported.oboroVersion, "0.3.1"); assert.equal(exported.schemaVersion, 1);
   assert.deepEqual(exported.permissionHints.origins, ["http://*/*", "https://*/*"]);
   assert.equal(exported.config.profile.name, legacy.name); assert.equal(exported.config.profile.keyboardLayout, "native");
   const text = api.serializeConfiguration(exported);
@@ -239,7 +239,7 @@ test("all-granted mode preserves permission hints without selecting/granting the
 
 test("configuration v3 rejects retired fields; v1/v2 imports discard them and re-export only supported overrides", async () => {
   const current = JSON.parse(await readFile(new URL("./fixtures/config/v3.json", import.meta.url), "utf8"));
-  assert.deepEqual(api.decodeConfiguration(JSON.stringify(current)).file, current);
+  assert.deepEqual(api.decodeConfiguration(JSON.stringify(current)).file, { ...current, schemaVersion: 1 });
   for (const key of ["accuracy", "altitude", "altitudeAccuracy", "speed", "heading"]) {
     const invalid = clone(current); invalid.config.profile.geolocation[key] = 0;
     assert.throws(() => api.decodeConfiguration(JSON.stringify(invalid)), error => error.issues?.[0]?.code === "unknown_field");
@@ -251,7 +251,7 @@ test("configuration v3 rejects retired fields; v1/v2 imports discard them and re
     assert.deepEqual(preview.proposed.profile.geolocation, { latitude: 52.52, longitude: 13.405 });
     await b.service.import(preview.id);
     const exported = await b.service.export(ui());
-    assert.equal(exported.schemaVersion, 3); assert.deepEqual(exported.config.profile.geolocation, preview.proposed.profile.geolocation);
+    assert.equal(exported.schemaVersion, 1); assert.deepEqual(exported.config.profile.geolocation, preview.proposed.profile.geolocation);
     for (const key of ["accuracy", "altitude", "altitudeAccuracy", "speed", "heading"]) assert.equal(api.serializeConfiguration(exported).includes('"' + key + '"'), false);
   }
   const retiredOnly = clone(partialFixture);
@@ -260,4 +260,31 @@ test("configuration v3 rejects retired fields; v1/v2 imports discard them and re
   assert.deepEqual(preview.proposed.profile.geolocation, {});
   await b.service.import(preview.id);
   assert.deepEqual((await b.service.export(ui())).config.profile.geolocation, {});
+});
+
+test("renumbered v1 preserves current overrides and stays distinct from original v1 imports", async () => {
+  const current = JSON.parse(await readFile(new URL("./fixtures/config/current-v1.json", import.meta.url), "utf8"));
+  const decoded = api.decodeConfiguration(JSON.stringify(current));
+  assert.equal(api.CONFIG_SCHEMA_VERSION, 1);
+  assert.equal(decoded.sourceSchemaVersion, 1); assert.equal(decoded.discardedGeolocationSettings, false);
+  assert.deepEqual(JSON.parse(api.serializeConfiguration(decoded.file)), current);
+  for (const version of ["0.0.2", "1.0.0", "15.0.0"]) {
+    const candidate = clone(current); candidate.oboroVersion = version;
+    assert.deepEqual(api.decodeConfiguration(JSON.stringify(candidate)).file, candidate);
+  }
+  const native = clone(current); native.config.profile = { name: "Native" };
+  assert.deepEqual(api.decodeConfiguration(JSON.stringify(native)).file.config.profile, { name: "Native", geolocation: {}, keyboardLayout: "native" });
+  for (const key of ["accuracy", "altitude", "altitudeAccuracy", "speed", "heading"]) {
+    const invalid = clone(current); invalid.config.profile.geolocation[key] = 0;
+    assert.throws(() => api.decodeConfiguration(JSON.stringify(invalid)), error => error.issues?.[0]?.code === "unknown_field");
+  }
+  assert.equal(api.decodeConfiguration(JSON.stringify(fixture)).discardedGeolocationSettings, true);
+  for (const file of [fixture, partialFixture, JSON.parse(await readFile(new URL("./fixtures/config/v3.json", import.meta.url), "utf8"))]) {
+    const backendState = backend(); const preview = await backendState.service.preview(JSON.stringify(file), ui());
+    assert.equal(preview.sourceSchemaVersion, file.schemaVersion);
+    await backendState.service.import(preview.id);
+    const exported = await backendState.service.export(ui());
+    assert.equal(exported.schemaVersion, 1); assert.equal(exported.config.profile.name, file.config.profile.name);
+    assert.equal(api.serializeConfiguration(exported).includes("discardedGeolocationSettings"), false);
+  }
 });

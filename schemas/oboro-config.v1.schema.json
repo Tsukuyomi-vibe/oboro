@@ -1,78 +1,216 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "urn:oboro:config:1",
+  "$id": "urn:oboro:config:0.0.1:1",
   "title": "oboro configuration v1",
-  "description": "Portable saved settings. Runtime validators additionally check finite numbers, trimmed strings/control characters, Intl locale/time-zone support, language-tag normalization, hosts, permission patterns and duplicate rules. Published v1 readers must remain supported.",
+  "description": "Current portable saved settings, numbered v1 starting with oboro 0.0.1. All functionality and sparse overrides from the previous v3 contract are retained. Historical v1/v2/v3 imports remain supported by compatibility readers.",
   "type": "object",
   "additionalProperties": false,
-  "required": ["format", "schemaVersion", "oboroVersion", "config", "permissionHints"],
+  "required": [
+    "format",
+    "schemaVersion",
+    "oboroVersion",
+    "config",
+    "permissionHints"
+  ],
   "properties": {
-    "format": { "const": "oboro-config" },
-    "schemaVersion": { "const": 1 },
-    "oboroVersion": { "type": "string", "pattern": "^\\d{1,5}(?:\\.\\d{1,5}){1,3}$", "description": "Exporter manifest.version; each numeric component is at most 65535. It does not select a schema reader." },
+    "format": {
+      "const": "oboro-config"
+    },
+    "schemaVersion": {
+      "const": 1
+    },
+    "oboroVersion": {
+      "type": "string",
+      "pattern": "^\\d{1,5}(?:\\.\\d{1,5}){1,3}$",
+      "description": "Exporter manifest.version. The 0.0.1 marker distinguishes current v1 exports from the original full v1 compatibility shape; supported sparse settings are accepted across exporter versions."
+    },
     "config": {
       "type": "object",
       "additionalProperties": false,
-      "required": ["profile", "sitePolicy", "ui"],
+      "required": [
+        "profile",
+        "sitePolicy",
+        "ui"
+      ],
       "properties": {
-        "profile": { "anyOf": [{ "type": "null" }, { "$ref": "#/$defs/profile" }] },
-        "sitePolicy": { "$ref": "#/$defs/sitePolicy" },
+        "profile": {
+          "anyOf": [
+            {
+              "type": "null"
+            },
+            {
+              "$ref": "#/$defs/profile"
+            }
+          ]
+        },
+        "sitePolicy": {
+          "$ref": "#/$defs/sitePolicy"
+        },
         "ui": {
-          "type": "object", "additionalProperties": false, "required": ["language", "theme"],
-          "properties": { "language": { "enum": ["en", "ru"] }, "theme": { "enum": ["system", "light", "dark"] } }
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "language",
+            "theme"
+          ],
+          "properties": {
+            "language": {
+              "enum": [
+                "en",
+                "ru"
+              ]
+            },
+            "theme": {
+              "enum": [
+                "system",
+                "light",
+                "dark"
+              ]
+            }
+          }
         }
       }
     },
     "permissionHints": {
-      "type": "object", "additionalProperties": false, "required": ["origins"],
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "origins"
+      ],
       "properties": {
         "origins": {
-          "type": "array", "maxItems": 2000,
-          "items": { "type": "string", "maxLength": 512, "pattern": "^https?://[^/]+/\\*$" },
-          "description": "HTTP/HTTPS match patterns without a path or port; informational only, never automatic permission grants. Duplicates are normalized."
+          "type": "array",
+          "maxItems": 2000,
+          "items": {
+            "type": "string",
+            "maxLength": 512,
+            "pattern": "^https?://[^/]+/\\*$"
+          },
+          "description": "Informational HTTP/HTTPS host access hints. Import does not grant access. Duplicates are normalized."
         }
       }
     }
   },
   "$defs": {
-    "nullableNonnegative": { "anyOf": [{ "type": "null" }, { "type": "number", "minimum": 0 }], "default": null },
     "profile": {
-      "type": "object", "additionalProperties": false,
-      "required": ["name", "geolocation", "languages", "locale", "timeZone"],
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "name"
+      ],
       "properties": {
-        "name": { "type": "string", "minLength": 1, "maxLength": 80 },
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 80
+        },
         "geolocation": {
-          "type": "object", "additionalProperties": false, "required": ["latitude", "longitude", "accuracy"],
+          "type": "object",
+          "additionalProperties": false,
+          "description": "Only present latitude and longitude are replaced in native get/watch results. All other coordinates, timestamp, options and errors stay native. An empty object leaves the API untouched.",
           "properties": {
-            "latitude": { "type": "number", "minimum": -90, "maximum": 90 },
-            "longitude": { "type": "number", "minimum": -180, "maximum": 180 },
-            "accuracy": { "type": "number", "minimum": 0 },
-            "altitude": { "type": ["number", "null"], "default": null },
-            "altitudeAccuracy": { "$ref": "#/$defs/nullableNonnegative" },
-            "speed": { "$ref": "#/$defs/nullableNonnegative" },
-            "heading": { "anyOf": [{ "type": "null" }, { "type": "number", "minimum": 0, "exclusiveMaximum": 360 }], "default": null }
+            "latitude": {
+              "type": "number",
+              "minimum": -90,
+              "maximum": 90
+            },
+            "longitude": {
+              "type": "number",
+              "minimum": -180,
+              "maximum": 180
+            }
           }
         },
-        "languages": { "type": "array", "minItems": 1, "maxItems": 10, "uniqueItems": true, "items": { "type": "string", "minLength": 1 } },
-        "locale": { "type": "string", "minLength": 1 },
-        "timeZone": { "type": "string", "minLength": 1 },
-        "keyboardLayout": { "enum": ["native", "us-qwerty", "de-qwertz", "ru-jcuken"], "default": "native" }
+        "languages": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 10,
+          "uniqueItems": true,
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "description": "Omission keeps both navigator languages and Accept-Language native."
+        },
+        "locale": {
+          "type": "string",
+          "minLength": 1
+        },
+        "timeZone": {
+          "type": "string",
+          "minLength": 1
+        },
+        "keyboardLayout": {
+          "enum": [
+            "native",
+            "us-qwerty",
+            "de-qwertz",
+            "ru-jcuken"
+          ],
+          "default": "native",
+          "description": "The native marker preserves each receiving PC's map; it contains no captured keys."
+        }
       }
     },
     "siteRule": {
-      "type": "object", "additionalProperties": false, "required": ["host", "schemes", "includeSubdomains"],
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "host",
+        "schemes",
+        "includeSubdomains"
+      ],
       "properties": {
-        "host": { "type": "string", "minLength": 1 },
-        "schemes": { "type": "array", "minItems": 1, "maxItems": 2, "uniqueItems": true, "items": { "enum": ["http", "https"] } },
-        "includeSubdomains": { "type": "boolean" }
+        "host": {
+          "type": "string",
+          "minLength": 1
+        },
+        "schemes": {
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 2,
+          "uniqueItems": true,
+          "items": {
+            "enum": [
+              "http",
+              "https"
+            ]
+          }
+        },
+        "includeSubdomains": {
+          "type": "boolean"
+        }
       }
     },
     "sitePolicy": {
-      "type": "object", "additionalProperties": false, "required": ["mode", "include", "exclude"],
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "mode",
+        "include",
+        "exclude"
+      ],
       "properties": {
-        "mode": { "enum": ["selected_sites", "all_granted_sites"] },
-        "include": { "type": "array", "maxItems": 100, "items": { "$ref": "#/$defs/siteRule" } },
-        "exclude": { "type": "array", "maxItems": 100, "items": { "$ref": "#/$defs/siteRule" } }
+        "mode": {
+          "enum": [
+            "selected_sites",
+            "all_granted_sites"
+          ]
+        },
+        "include": {
+          "type": "array",
+          "maxItems": 100,
+          "items": {
+            "$ref": "#/$defs/siteRule"
+          }
+        },
+        "exclude": {
+          "type": "array",
+          "maxItems": 100,
+          "items": {
+            "$ref": "#/$defs/siteRule"
+          }
+        }
       }
     }
   }

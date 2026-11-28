@@ -1,6 +1,6 @@
 # Configuration files and compatibility
 
-The main extension exports **oboro-config**, currently schema **3** (oboro 0.3.3). Export is a read-only operation on saved settings. [English usage](../README.md#configuration-backup) · [Русская инструкция](../README.ru.md#резервная-копия-конфигурации) · [JSON Schema v3](../schemas/oboro-config.v3.schema.json) · [Retained JSON Schema v2](../schemas/oboro-config.v2.schema.json) · [Retained JSON Schema v1](../schemas/oboro-config.v1.schema.json).
+The main extension exports **oboro-config**, currently schema **1** (oboro 0.0.1). Numbering was restarted at the user's request; all features of the previous schema 3 remain. Internal stored profiles keep their independent schema 3. Export is a read-only operation on saved settings. [English usage](../README.md#configuration-backup) · [Русская инструкция](../README.ru.md#резервная-копия-конфигурации) · [Current JSON Schema v1](../schemas/oboro-config.v1.schema.json) · [Previous schema v3](../schemas/oboro-config.v3.schema.json) · [Retained JSON Schema v2](../schemas/oboro-config.v2.schema.json) · [Original full v1 schema](../schemas/legacy/oboro-config.v1.schema.json).
 
 ## Portable contract
 
@@ -9,7 +9,7 @@ Files are UTF-8 JSON, limited to **1 MiB of UTF-8 bytes**. The filename is `obor
 | Field | Meaning |
 | --- | --- |
 | `format` | Literal `oboro-config` |
-| `schemaVersion` | Positive integer selecting the published schema reader; currently 3 |
+| `schemaVersion` | Positive integer selecting the published schema reader; currently 1 |
 | `oboroVersion` | Exporter's `chrome.runtime.getManifest().version`, independent of schema selection |
 | `config.profile` | Normalized profile draft, or null to clear the profile |
 | `config.sitePolicy` | Selection mode, include and exclude rules |
@@ -18,7 +18,7 @@ Files are UTF-8 JSON, limited to **1 MiB of UTF-8 bytes**. The filename is `obor
 
 Only `config.profile.name` is required when a profile exists. Latitude, longitude, preferred languages, formatting locale and named time zone are independent optional overrides. Accuracy, altitude, altitude accuracy, speed and heading are no longer configurable. An omitted value means **use the receiving browser's native value**. No default is read from the exporting computer and written into the file. Empty UI inputs omit the corresponding property; they do not become zero, null, an empty language list or a copied browser value. Zero is an explicit override. The keyboard layout defaults to the `native` marker, which keeps the receiving PC's map without capturing it.
 
-For example, this v3 profile overrides only latitude on every PC:
+For example, this current v1 profile overrides only latitude on every PC:
 
 ```json
 {
@@ -32,7 +32,7 @@ Longitude, accuracy, altitude, altitude accuracy, speed and heading are merged f
 
 Missing `languages` leaves both navigator languages and Accept-Language unchanged. Missing `locale` keeps the browser's formatting locale even if a time zone is set. Missing `timeZone` keeps native local time even if a formatting locale is set. Missing/native keyboard layout keeps the native map. Derived navigator language is present only when languages are set, and is recomputed from their first normalized tag.
 
-V3 accepts only `latitude` and `longitude` in `geolocation`; the five retired keys are rejected as unknown fields. `null`, `unknown`, empty strings and non-finite numbers are invalid coordinates. Optional internal profile properties are omitted; `geolocation: {}` and `keyboardLayout: "native"` are canonical native markers.
+Current v1 exports accept only `latitude` and `longitude` in `geolocation`; the five retired keys are rejected as unknown fields. `null`, `unknown`, empty strings and non-finite numbers are invalid coordinates. Optional internal profile properties are omitted; `geolocation: {}` and `keyboardLayout: "native"` are canonical native markers.
 
 The external schema is independent of `RegionalProfile.schemaVersion`, `SitePolicy.schemaVersion`, and their local edit counters. Local `revision`, `policyRevision` and the profile revision clock are not serialized. They are assigned from the receiving installation when importing; clearing/recreating a profile does not reuse an earlier revision.
 
@@ -45,13 +45,13 @@ Only declared settings are serialized. No activation state, runtime snapshots, r
 3. A future schema is rejected before writes with a request to update oboro. Unknown fields and unsupported values are rejected. The explicit v1/v2 migration exception discards the five retired geolocation settings, as explained in the import preview.
 4. A changed field structure, enum meaning or default behavior requires a new external schema and a pure migration from previously supported schemas into the current DTO. Preserve the original source schema/app version in the import preview.
 5. Validate both the source representation and the migrated result. Keep migrations free of storage writes, Chrome permission requests and activation effects.
-6. Keep published schemas v1/v2 and their fixtures unchanged when introducing v3. Add the v3 schema, reader/migrations and round-trip/old-file regression cases. Internal storage or journal changes require their own recovery/migration rules.
+6. Keep historical schemas and fixtures available. The original full v1 schema is archived under schemas/legacy; v2/v3 and all historical fixtures remain unchanged. The current v1 has a distinct JSON Schema ID, urn:oboro:config:0.0.1:1, and a separate current-v1 fixture. Internal storage or journal changes require their own recovery/migration rules.
 
-The registry retains strict v1/v2 source validators and adds v3. After validating an old source, pure migrations keep latitude/longitude and all non-geolocation settings while dropping accuracy, altitude, altitude accuracy, speed and heading. A v2 file containing only retired geo fields becomes `geolocation: {}` and requests no geolocation override. Preview identifies the original schema and explains this removal. New exports never contain those settings. Stored profiles v1/v2 normalize in memory to v3 without writes on read; normal edits/imports persist v3. Published schemas and fixtures v1/v2 remain unchanged.
+The import registry accepts source numbers 1, 2 and 3 and normalizes them into current portable v1. A current v1 file from oboro 0.0.1 is strictly validated with the existing latitude/longitude-only model. An original full v1 file from a different exporter is recognized by the presence of retired geolocation keys and validated by its historical reader before those keys are discarded. Sparse supported settings remain accepted across exporter versions. This one-time disambiguation is required by the numbering reset; the oboroVersion value remains the actual exporter provenance. Source v2 keeps its historical validator and source v3 uses the same supported settings as current v1. Only actual discarded fields trigger the removal notice. Internal profiles still normalize to storage schema 3, without writes on read. The supported source range is independent of the current export number; unsupported source numbers above 3 are rejected before writes.
 
 ## Legacy profile adapter
 
-Standalone regional-profile v1, v2 and v3 shapes, including their local schemaVersion/revision and derived language when languages exist, are recognized separately. V1/v2 adapters discard the retired geo settings and preserve the supported overrides. V3 rejects retired keys. Missing keyboardLayout keeps native behavior. These files never recorded an exporter app version, so the preview shows that version as unknown. The adapter strips local revision and derived language and restores only the profile; site policy, permission hints and UI preferences are preserved. All new full exports record the actual exporting oboro version.
+Standalone regional-profile v1, v2 and v3 shapes, including their local schemaVersion/revision and derived language when languages exist, are recognized separately. V1/v2 adapters discard the retired geo settings and preserve the supported overrides. Standalone profile v3 rejects retired keys. Missing keyboardLayout keeps native behavior. These files never recorded an exporter app version, so the preview shows that version as unknown. The adapter strips local revision and derived language and restores only the profile; site policy, permission hints and UI preferences are preserved. All new full exports record the actual exporting oboro version.
 
 ## Preview and save
 
@@ -67,4 +67,4 @@ Successful import leaves the master switch off. Existing pages may retain old wr
 
 ## Verification
 
-`tests/config.test.mjs` covers frozen v1/v2 migration, v3 round-trips and rejection of retired fields, legacy normalization, version discrimination, UTF-8 limits, unknown fields, export privacy, revision monotonicity, conflicts and recovery under failed/partial/ambiguous storage writes. `tests/config-ui.test.mjs` exercises actual UI/worker bundles, native placeholders after partial imports, removal of old language rules, previews, UI restoration, cleanup, access gestures and the compatibility gate. `tests/partial-profile.test.mjs` checks every optional input and runtime module, partial get/watch responses and the same latitude-only JSON in two separate Node processes with different host locale/time zone/geolocation/keyboard providers. These are synthetic regression checks; native Chrome acceptance remains separate.
+`tests/config.test.mjs` covers frozen v1/v2 migration, current v1 round-trips, previous v3 imports and rejection of retired fields, legacy normalization, version discrimination, UTF-8 limits, unknown fields, export privacy, revision monotonicity, conflicts and recovery under failed/partial/ambiguous storage writes. `tests/config-ui.test.mjs` exercises actual UI/worker bundles, native placeholders after partial imports, removal of old language rules, previews, UI restoration, cleanup, access gestures and the compatibility gate. `tests/partial-profile.test.mjs` checks every optional input and runtime module, partial get/watch responses and the same latitude-only JSON in two separate Node processes with different host locale/time zone/geolocation/keyboard providers. These are synthetic regression checks; native Chrome acceptance remains separate.

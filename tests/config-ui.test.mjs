@@ -35,11 +35,23 @@ test("configuration UI exports a real JSON download with manifest version, saved
   assert.equal(captured.length, 1); assert.equal(captured[0].name, "oboro-config-" + ui.window.chrome.runtime.getManifest().version + ".json");
   assert.equal(captured[0].blob.type, "application/json");
   const file = JSON.parse(await blobText(ui, captured[0].blob));
-  assert.equal(file.oboroVersion, ui.window.chrome.runtime.getManifest().version); assert.equal(file.schemaVersion, 3);
+  assert.equal(file.oboroVersion, ui.window.chrome.runtime.getManifest().version); assert.equal(file.schemaVersion, 1);
   assert.equal(file.config.profile.name, exampleProfile().name); assert.equal(file.config.ui.language, "en"); assert.equal(file.config.ui.theme, "dark");
   assert.equal("revision" in file.config.profile, false); assert.deepEqual(ui.snapshot(), before);
   assert.equal(ui.query('[name="name"]').value, "unsaved draft"); assert.equal(ui.calls.includes("permission.request"), false);
   assert.match(ui.query("#config-feedback").textContent, /Unsaved edits are not included/);
+});
+
+test("current v1 from oboro 0.0.1 imports without a legacy-removal notice and keeps sparse settings", async t => {
+  const ui = optionsPage({ language: null }); t.after(ui.close); await ui.flush();
+  const config = JSON.parse(await readFile(new URL("./fixtures/config/current-v1.json", import.meta.url), "utf8"));
+  await selectFile(ui, config);
+  assert.match(ui.query("#config-source").textContent, /File from oboro 0.0.1, format 1/);
+  assert.equal(ui.query("#config-preview-hints").hidden, true);
+  ui.click("#import-config-confirm"); await ui.flush();
+  assert.equal(ui.snapshot().regionalProfile.schemaVersion, 3);
+  assert.deepEqual(ui.snapshot().regionalProfile.geolocation, { latitude: 52.52 });
+  for (const field of ["languages", "locale", "timeZone"]) assert.equal(Object.hasOwn(ui.snapshot().regionalProfile, field), false);
 });
 
 test("configuration UI previews exact changes safely and cancel preserves saved state", async t => {

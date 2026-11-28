@@ -77,7 +77,7 @@ export function mountConfigurationTransfer(): void {
     unchanged.hidden = count !== 0;
     allGrantedNote.hidden = value.proposed.sitePolicy.mode !== "all_granted_sites";
     for (const origin of value.permissionHints.origins) { const item = document.createElement("li"); setPlainText(item, origin); hints.append(item); }
-    const legacy = value.sourceSchemaVersion < 3 && value.proposed.profile !== null;
+    const legacy = value.discardedGeolocationSettings;
     if (legacy) {
       const item = document.createElement("li");
       setText(item, "Файл старого формата. Из геопараметров импортируются только широта и долгота; остальные настройки геолокации удалены."); hints.append(item);

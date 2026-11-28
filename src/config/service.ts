@@ -92,6 +92,7 @@ export class ConfigurationService {
     const decoded = decodeConfiguration(text), ui = parseUiPreferences(uiValue), snapshot = await this.snapshot();
     const current = this.settings(snapshot, ui);
     const view: ConfigurationPreview = { id: this.dependencies.id(), kind: decoded.kind, sourceOboroVersion: decoded.sourceOboroVersion, sourceSchemaVersion: decoded.sourceSchemaVersion,
+      discardedGeolocationSettings: decoded.discardedGeolocationSettings,
       current, proposed: decoded.kind === "configuration" ? decoded.file.config : { ...current, profile: decoded.profile },
       permissionHints: decoded.kind === "configuration" ? decoded.file.permissionHints : snapshot.hints };
     if (this.previews.size >= 8) { const oldest = this.previews.keys().next().value; if (oldest) this.previews.delete(oldest); }

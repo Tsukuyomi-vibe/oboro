@@ -88,9 +88,9 @@ test("language, locale, time zone and keyboard can each be selected independentl
   assert.equal(await keyboard.run("navigator.keyboard.getLayoutMap().then(map=>map.get('KeyY'))"), "z");
 });
 
-test("v1 backups migrate to v3 and drop retired geolocation settings", async () => {
+test("original v1 backups migrate to current portable v1 and drop retired geolocation settings", async () => {
   const old = JSON.parse(await read("./fixtures/config/v1.json")); const migrated = form.decodeConfiguration(JSON.stringify(old));
-  assert.equal(migrated.sourceSchemaVersion, 1); assert.equal(migrated.file.schemaVersion, 3);
+  assert.equal(migrated.sourceSchemaVersion, 1); assert.equal(migrated.file.schemaVersion, 1);
   assert.deepEqual(migrated.file.config, { ...old.config, profile: { ...old.config.profile, geolocation: { latitude: 52.52, longitude: 13.405 } } });
   const fields = form.profileToFields(migrated.file.config.profile); for (const key of ["accuracy", "altitude", "altitudeAccuracy", "speed", "heading"]) assert.equal(Object.hasOwn(fields, key), false);
   const invalid = structuredClone(old); delete invalid.config.profile.geolocation.latitude;

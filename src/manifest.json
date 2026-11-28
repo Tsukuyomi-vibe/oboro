@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "oboro",
   "description": "Language, geolocation, time and keyboard map profiles for selected sites. Built-in settings editor.",
-  "version": "0.3.3",
+  "version": "0.0.1",
   "minimum_chrome_version": "120",
   "permissions": ["storage", "activeTab", "userScripts", "scripting", "declarativeNetRequestWithHostAccess", "webNavigation"],
   "optional_host_permissions": ["http://*/*", "https://*/*"],

@@ -1,7 +1,7 @@
 {
   "schemaVersion": 1,
-  "packageVersion": "0.3.3",
-  "date": "2026-11-27",
+  "packageVersion": "0.0.1",
+  "date": "2026-11-28",
   "status": "BLOCKED_NATIVE_BROWSER_ACCEPTANCE",
   "requiredCases": [
     {
@@ -31,7 +31,7 @@
     {
       "id": "locale_time",
       "title": "Локали и время",
-      "procedure": "Независимые locale-only/timezone-only/native профили; Date/Intl: зима/лето/DST, конструктор/ISO/локальные setters, явные зоны, timestamp/ISO/JSON/clone; JSON v3 с одной широтой на ПК с другой локалью и поясом",
+      "procedure": "Независимые locale-only/timezone-only/native профили; Date/Intl: зима/лето/DST, конструктор/ISO/локальные setters, явные зоны, timestamp/ISO/JSON/clone; JSON v1 с одной широтой на ПК с другой локалью и поясом",
       "required": true
     },
     {
